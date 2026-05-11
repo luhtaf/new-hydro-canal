@@ -14,19 +14,22 @@ const store = {
 // ---------- Mock data ----------
 const MOCK = {
   tasks: [
-    { id: 'KBN01-K01', region: 'PT. Ciptamas BS',   district: '3C01 Banyuasin',    date: '12 Mei', status: 'belum', sta: '0 → 500',    kanal: 'KBN01-K01', lat: -2.9432, lng: 104.7551, distance: '34 km' },
-    { id: 'KBN01-K02', region: 'PT. Musi Nauli',    district: '3C01 Banyuasin',    date: '12 Mei', status: 'jalan', sta: '500 → 1200', kanal: 'KBN01-K02', lat: -2.9501, lng: 104.7612, distance: '34 km' },
-    { id: 'KBN01-K03', region: 'PT. Sumber Hijau',  district: '3C05 OKI Selatan',  date: '13 Mei', status: 'belum', sta: '0 → 420',    kanal: 'KBN01-K03', lat: -3.1245, lng: 105.0148, distance: '82 km' },
+    { id: 'KBN01-K01', region: 'PT. Ciptamas BS',   district: '3C01 Banyuasin',    date: '12 Mei', status: 'belum',   sta: '0 → 500',    kanal: 'KBN01-K01', lat: -2.9432, lng: 104.7551, distance: '34 km', undanganNo: 'PAT-2026-0042', qcOutput: null },
+    { id: 'KBN01-K02', region: 'PT. Musi Nauli',    district: '3C01 Banyuasin',    date: '12 Mei', status: 'jalan',   sta: '500 → 1200', kanal: 'KBN01-K02', lat: -2.9501, lng: 104.7612, distance: '34 km', undanganNo: 'PAT-2026-0042', qcOutput: null },
+    { id: 'KBN01-K03', region: 'PT. Sumber Hijau',  district: '3C05 OKI Selatan',  date: '13 Mei', status: 'belum',   sta: '0 → 420',    kanal: 'KBN01-K03', lat: -3.1245, lng: 105.0148, distance: '82 km', undanganNo: 'PAT-2026-0040', qcOutput: null },
+    { id: 'KBN01-D01', region: 'PT. Ciptamas BS',   district: '3C01 Banyuasin',    date: '08 Mei', status: 'selesai', sta: '0 → 500',    kanal: 'KBN01-D01', lat: -2.9388, lng: 104.7490, distance: '34 km', undanganNo: 'PAT-2026-0035', qcOutput: '3C01-260508-KBN01-1R0Q1' },
+    { id: 'KBN02-K07', region: 'PT. Ciptamas BS',   district: '3C05 OKI Selatan',  date: '07 Mei', status: 'selesai', sta: '0 → 380',    kanal: 'KBN02-K07', lat: -3.1812, lng: 105.0823, distance: '92 km', undanganNo: 'PAT-2026-0033', qcOutput: '3C05-260507-KBN02-1R0Q1' },
+    { id: 'KBN01-K05', region: 'PT. Ciptamas BS',   district: '3C02 Musi Banyuasin', date: '06 Mei', status: 'selesai', sta: '0 → 320',  kanal: 'KBN01-K05', lat: -2.7102, lng: 104.5018, distance: '108 km', undanganNo: 'PAT-2026-0032', qcOutput: '3C02-260506-KBN01-1R0Q2' },
   ],
   undangan: [
-    { no: 'PAT-2026-0042', kontraktor: 'PT. Musi Nauli Lestari',    short: 'PT. MNL', region: '3C01 Banyuasin',     sched: '15 Mei 2026', kanal: 6, status: 'menunggu' },
-    { no: 'PAT-2026-0041', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C05 OKI Selatan',   sched: '14 Mei 2026', kanal: 4, status: 'aktif' },
-    { no: 'PAT-2026-0040', kontraktor: 'PT. Sumber Hijau Permai',   short: 'PT. SHP', region: '3S02 Empat Lawang',  sched: '13 Mei 2026', kanal: 3, status: 'aktif' },
-    { no: 'PAT-2026-0039', kontraktor: 'PT. Musi Nauli Lestari',    short: 'PT. MNL', region: '3M01 Musi Rawas',    sched: '12 Mei 2026', kanal: 8, status: 'aktif' },
-    { no: 'PAT-2026-0038', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C02 Musi Banyuasin',sched: '11 Mei 2026', kanal: 5, status: 'selesai' },
-    { no: 'PAT-2026-0037', kontraktor: 'PT. Sumber Hijau Permai',   short: 'PT. SHP', region: '3S01 Lahat',         sched: '10 Mei 2026', kanal: 2, status: 'selesai' },
-    { no: 'PAT-2026-0036', kontraktor: 'PT. Musi Nauli Lestari',    short: 'PT. MNL', region: '3M02 PALI',          sched: '09 Mei 2026', kanal: 7, status: 'selesai' },
-    { no: 'PAT-2026-0035', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C01 Banyuasin',     sched: '08 Mei 2026', kanal: 4, status: 'selesai' },
+    { no: 'PAT-2026-0042', kontraktor: 'PT. Musi Nauli Lestari',    short: 'PT. MNL', region: '3C01 Banyuasin',     sched: '15 Mei 2026', kanal: 6, status: 'menunggu', tasks: ['KBN01-K01','KBN01-K02'] },
+    { no: 'PAT-2026-0041', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C05 OKI Selatan',   sched: '14 Mei 2026', kanal: 4, status: 'aktif',    tasks: [] },
+    { no: 'PAT-2026-0040', kontraktor: 'PT. Sumber Hijau Permai',   short: 'PT. SHP', region: '3S02 Empat Lawang',  sched: '13 Mei 2026', kanal: 3, status: 'aktif',    tasks: ['KBN01-K03'] },
+    { no: 'PAT-2026-0039', kontraktor: 'PT. Musi Nauli Lestari',    short: 'PT. MNL', region: '3M01 Musi Rawas',    sched: '12 Mei 2026', kanal: 8, status: 'aktif',    tasks: [] },
+    { no: 'PAT-2026-0038', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C02 Musi Banyuasin',sched: '11 Mei 2026', kanal: 5, status: 'selesai',  tasks: [] },
+    { no: 'PAT-2026-0035', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C01 Banyuasin',     sched: '08 Mei 2026', kanal: 4, status: 'selesai',  tasks: ['KBN01-D01'] },
+    { no: 'PAT-2026-0033', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C05 OKI Selatan',   sched: '07 Mei 2026', kanal: 3, status: 'selesai',  tasks: ['KBN02-K07'] },
+    { no: 'PAT-2026-0032', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C02 Musi Banyuasin',sched: '06 Mei 2026', kanal: 2, status: 'selesai',  tasks: ['KBN01-K05'] },
   ],
   initialQueue: [
     { id: 'q1', kind: 'Data kedalaman', label: 'KBN01-K02 · 35 titik', size: '12 KB', when: 'baru saja' },
@@ -140,6 +143,7 @@ const routes = {
   '/users':                 { tpl: 'view-users',                  role: 'admin', after: renderUsers },
   '/reports':               { tpl: 'view-reports',                role: 'admin', after: renderReports },
   '/audit':                 { tpl: 'view-audit',                  role: 'admin', after: renderAudit },
+  '/help':                  { tpl: 'view-help' },
   '/undangan/baru':         { tpl: 'view-undangan-baru',          role: 'admin' },
 };
 
@@ -192,6 +196,19 @@ function renderDashboard() {
   }).join('');
   // Click hook → set selected task
   wrap.querySelectorAll('a[data-task]').forEach(a => a.addEventListener('click', () => { state.selectedTask = a.dataset.task; }));
+
+  // Live activity feed
+  const act = document.getElementById('dashboard-activity');
+  if (act) {
+    const items = MOCK.audit.slice(0, 5);
+    const actionIcon = { edit: 'pencil', sync: 'cloud-upload', assign: 'user-plus', threshold: 'settings-2', login: 'log-in' };
+    act.innerHTML = items.map(a => `<div class="audit-row" style="grid-template-columns: 32px 1fr auto">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-${a.uColor}-500 to-${a.uColor}-700 grid place-items-center text-white text-[10px] font-bold">${a.uIcon}</div>
+      <div class="min-w-0"><div class="text-sm"><b>${a.user}</b> · ${a.kind} <span class="text-slate-500">→</span> <span class="font-mono text-xs">${a.target}</span></div><div class="text-xs text-slate-500 mt-0.5">${a.detail || ''} <span class="text-slate-400">· ${a.when}</span></div></div>
+      <i data-lucide="${actionIcon[a.action] || 'activity'}" class="w-4 h-4 text-slate-400"></i>
+    </div>`).join('');
+    lucide.createIcons();
+  }
 }
 
 function renderCalendar() {
@@ -320,6 +337,10 @@ function renderPenugasanDetail() {
           <span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${s.t}</span>
         </div>
         <p class="text-sm text-slate-600 mt-1">${t.region} · ${t.district}</p>
+        <p class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
+          <span class="inline-flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3"></i>Dari undangan: <a href="#/undangan/detail" class="text-brand-600 font-semibold hover:underline">${t.undanganNo}</a></span>
+          ${t.qcOutput ? `<span class="text-slate-300">·</span><span class="inline-flex items-center gap-1"><i data-lucide="file-text" class="w-3 h-3"></i>Output: <a href="#/qc" class="text-brand-600 font-mono font-semibold hover:underline">${t.qcOutput}</a></span>` : ''}
+        </p>
       </div>
       <div class="flex gap-2 no-print">
         <button class="btn btn-ghost" onclick="window.print()"><i data-lucide="printer" class="w-4 h-4"></i>Cetak</button>
@@ -569,12 +590,12 @@ function renderNotifikasi() {
 
 window.markNotifRead = (id) => {
   const n = state.notifications.find(x => x.id === id);
-  if (n) { n.read = true; persist(); renderNotifikasi(); }
+  if (n) { n.read = true; persist(); renderNotifikasi(); updateTitleBadge(); }
 };
 
 window.markAllNotifRead = () => {
   state.notifications.forEach(n => n.read = true);
-  persist(); renderNotifikasi();
+  persist(); renderNotifikasi(); updateTitleBadge();
   toast('Semua ditandai dibaca', 'ok');
 };
 
@@ -749,7 +770,9 @@ const CMD_ITEMS = [
   { id: 'rep',     label: 'Reports & Analytics (admin)',icon: 'bar-chart-3',      go: '#/reports' },
   { id: 'aud',     label: 'Audit log (admin)',          icon: 'scroll-text',      go: '#/audit' },
   { id: 'role',    label: 'Ganti role (admin/operator)',icon: 'shield-check',     action: () => toggleRole() },
+  { id: 'help',    label: 'Bantuan & shortcuts',        icon: 'circle-help',      go: '#/help' },
   { id: 'tour',    label: 'Mulai walkthrough tour',     icon: 'presentation',     action: () => startTour() },
+  { id: 'tconf',   label: 'Trigger konflik sync (demo)',icon: 'zap',              action: () => { location.hash = '#/konflik'; setTimeout(triggerConflict, 200); } },
   { id: 'theme',   label: 'Toggle dark mode',           icon: 'sun-moon',         action: () => toggleTheme() },
   { id: 'conn',    label: 'Toggle offline/online',      icon: 'wifi-off',         action: () => toggleConnectivity() },
   { id: 'sync',    label: 'Sinkron sekarang',           icon: 'refresh-cw',       action: () => forceSyncAll() },
@@ -1121,6 +1144,243 @@ function showTourStep() {
 window.endTour = endTour;
 
 // ============================================================
+// LIVE CLOCK + TITLE BADGE
+// ============================================================
+function tickClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const t = document.getElementById('clock-time'); if (t) t.textContent = `${hh}:${mm}:${ss}`;
+  const d = document.getElementById('clock-date'); if (d) {
+    const days = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    d.textContent = `${days[now.getDay()]} · ${now.getDate()} ${months[now.getMonth()]}`;
+  }
+}
+
+function updateTitleBadge() {
+  const unread = state.notifications.filter(n => !n.read).length;
+  document.title = (unread > 0 ? `(${unread}) ` : '') + 'HydroCanal QC — Operations';
+}
+
+// ============================================================
+// CONFLICT SIMULATOR
+// ============================================================
+const CONFLICT_TEMPLATES = [
+  { sta: 660, you: 2.910, them: 2.780, who: 'Andi S.', uColor: 'emerald', uIcon: 'AS' },
+  { sta: 540, you: 2.430, them: 2.510, who: 'Sari P.', uColor: 'rose',    uIcon: 'SP' },
+  { sta: 820, you: 3.120, them: 2.980, who: 'Budi S.', uColor: 'amber',   uIcon: 'BS' },
+  { sta: 700, you: 2.650, them: 2.720, who: 'Andi S.', uColor: 'emerald', uIcon: 'AS' },
+];
+let conflictTriggerIdx = 0;
+
+function triggerConflict() {
+  const wrap = document.getElementById('conflict-extra');
+  if (!wrap) return;
+  const c = CONFLICT_TEMPLATES[conflictTriggerIdx % CONFLICT_TEMPLATES.length];
+  conflictTriggerIdx++;
+  const id = 'live-' + Date.now().toString(36);
+  const finalYou  = (c.you  + 2.15 + 0.45 + 0.08 - 0.02).toFixed(3);
+  const finalThem = (c.them + 2.15 + 0.45 + 0.08 - 0.02).toFixed(3);
+  const article = document.createElement('article');
+  article.className = 'bg-white rounded-xl border-2 border-rose-300 shadow-card overflow-hidden animate-slide-up';
+  article.innerHTML = `
+    <div class="p-4 bg-gradient-to-r from-rose-100 to-white border-b border-rose-100 flex flex-wrap items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-rose-100 grid place-items-center text-rose-600"><i data-lucide="git-merge" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><div class="font-bold font-mono">KBN01-K02 · STA ${c.sta}</div><div class="text-xs text-slate-600">Konflik baru terdeteksi · field <code class="font-mono">depth</code></div></div>
+      <span class="badge bg-rose-100 text-rose-700"><span class="badge-dot bg-rose-500 animate-pulse-dot"></span>Baru</span>
+      <span class="text-xs text-slate-500">baru saja</span>
+    </div>
+    <div class="grid md:grid-cols-2 divide-x divide-slate-100">
+      <label class="p-4 cursor-pointer hover:bg-emerald-50/30 relative">
+        <input type="radio" name="${id}" checked class="absolute top-4 right-4"/>
+        <div class="flex items-center gap-2 mb-3"><div class="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-[10px] font-bold">FA</div><div class="text-xs"><div class="font-semibold">Versi kamu (lokal)</div><div class="text-slate-500">baru saja</div></div></div>
+        <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 font-mono text-sm"><div class="text-slate-500 text-xs mb-1">depth</div><div class="font-bold text-emerald-600 text-lg">${c.you.toFixed(3)}</div><div class="text-slate-400 text-xs mt-2">final: <b>${finalYou}</b></div></div>
+      </label>
+      <label class="p-4 cursor-pointer hover:bg-emerald-50/30 relative">
+        <input type="radio" name="${id}" class="absolute top-4 right-4"/>
+        <div class="flex items-center gap-2 mb-3"><div class="w-7 h-7 rounded-full bg-gradient-to-br from-${c.uColor}-500 to-${c.uColor}-700 grid place-items-center text-white text-[10px] font-bold">${c.uIcon}</div><div class="text-xs"><div class="font-semibold">Versi ${c.who} (server)</div><div class="text-slate-500">sinkron 30 detik lalu</div></div></div>
+        <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 font-mono text-sm"><div class="text-slate-500 text-xs mb-1">depth</div><div class="font-bold text-rose-600 text-lg">${c.them.toFixed(3)}</div><div class="text-slate-400 text-xs mt-2">final: <b>${finalThem}</b></div></div>
+      </label>
+    </div>
+    <div class="p-3 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-2">
+      <button class="btn btn-ghost text-xs"><i data-lucide="line-chart" class="w-3.5 h-3.5"></i>Lihat di chart</button>
+      <div class="ml-auto"><button class="btn btn-primary text-xs" onclick="resolveConflict('${id}')"><i data-lucide="check" class="w-3.5 h-3.5"></i>Selesaikan</button></div>
+    </div>`;
+  wrap.prepend(article);
+  lucide.createIcons();
+  toast(`Konflik baru pada STA ${c.sta} — minta resolusi`, 'warn');
+}
+
+// ============================================================
+// REAL EXPORT
+// ============================================================
+function downloadBlob(content, filename, mime) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime || 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+function sampleDepthRows() {
+  const t = state.threshold; const data = []; let d = 2.6;
+  for (let i = 0; i < 35; i++) {
+    d += (Math.random() - 0.5) * 0.4; d = Math.max(1.4, Math.min(3.4, d));
+    const sta = 500 + i * 20;
+    const stored = state.depthEdits[`KBN01-K02:${sta}`];
+    const depth = stored != null ? +stored : +d.toFixed(3);
+    const status = depth >= t.lulus ? 'pass' : depth >= t.tidakLulus ? 'tol' : 'fail';
+    data.push({ no: i + 1, sta, lat: -2.943 + i * 0.0001, lng: 104.755 + i * 0.0001, depth, status });
+  }
+  return data;
+}
+
+function exportTXT() {
+  const rows = sampleDepthRows();
+  const header = [
+    '3C01-20260515-KBN01-1R0Q1',
+    'ORDER NO   : PAT-2026-0042',
+    'KANAL ID   : KBN01-K02',
+    'DISTRICT   : 3C01 Banyuasin',
+    'OPERATOR   : Fathul A.',
+    'QC DATE    : 2026-05-15',
+    'QC TYPE    : Q1 (QC)',
+    'REVISION   : 000',
+    '',
+    'STA       LAT             LON             DEPTH      STATUS',
+    '------    --------------  --------------  --------   --------',
+  ];
+  const body = rows.map(r =>
+    `${String(r.sta).padEnd(6)}    ${r.lat.toFixed(6)}      ${r.lng.toFixed(6)}      ${r.depth.toFixed(3).padStart(7)}    ${r.status.toUpperCase()}`
+  );
+  downloadBlob([...header, ...body, ''].join('\n'), '3C01-20260515-KBN01-1R0Q1.txt', 'text/plain');
+  toast('TXT di-generate & di-download.', 'ok');
+}
+
+function exportCSV() {
+  const rows = sampleDepthRows();
+  const lines = [['No','STA','Easting_UTM','Northing_UTM','Depth_m','Status'].join(',')];
+  rows.forEach(r => {
+    // Fake UTM conversion for demo
+    const easting  = (r.lng * 111000 + 200000).toFixed(2);
+    const northing = (Math.abs(r.lat) * 111000).toFixed(2);
+    lines.push([r.no, r.sta, easting, northing, r.depth.toFixed(3), r.status].join(','));
+  });
+  downloadBlob(lines.join('\n'), 'PAT-2026-0042-KBN01-K02-utm.csv', 'text/csv');
+  toast('CSV (UTM) di-generate & di-download.', 'ok');
+}
+
+function exportXLSX() {
+  if (!window.XLSX) { toast('SheetJS belum siap.', 'err'); return; }
+  const rows = sampleDepthRows();
+  // Sheet 1: parameter
+  const param = [
+    ['Field', 'Value'],
+    ['Kanal ID', 'KBN01-K02'],
+    ['Order No', 'PAT-2026-0042'],
+    ['Operation No', '0010'],
+    ['Water level', state.threshold.lulus ? '2.150' : '2.150'],
+    ['Tranducer', '0.450'],
+    ['Bed float', '0.080'],
+    ['Depth correction', '0.020'],
+    ['QC Date', '2026-05-15'],
+    ['Operator', 'Fathul A.'],
+  ];
+  // Sheet 2: depth points
+  const depth = [['No','STA','Latitude','Longitude','Depth (m)','Status'], ...rows.map(r => [r.no, r.sta, r.lat.toFixed(6), r.lng.toFixed(6), r.depth.toFixed(3), r.status])];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(param), 'Page 2 - Parameter');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(depth), 'Page 3 - Kedalaman');
+  XLSX.writeFile(wb, 'KBN01-K02-2026-0515.xlsx');
+  toast('Excel di-generate & di-download (2 sheet).', 'ok');
+}
+
+function exportPNG() {
+  // Generate quick canvas snapshot of mock depth chart
+  const c = document.createElement('canvas');
+  c.width = 1147; c.height = 722;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
+  // Header
+  ctx.fillStyle = '#0f172a'; ctx.font = 'bold 18px Inter, sans-serif';
+  ctx.fillText('KBN01-K02 · 3C01 Banyuasin', 40, 36);
+  ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = '#64748b';
+  ctx.fillText('QC DATE: 2026-05-15 · OPERATOR: Fathul A. · PT. MNL', 40, 56);
+  // Legend
+  const legend = [['#10b981', `PASS ≥ ${state.threshold.lulus.toFixed(2)}`], ['#f59e0b', `${state.threshold.batasAwal.toFixed(2)} ≤ TOL < ${state.threshold.batasAkhir.toFixed(2)}`], ['#ef4444', `NOT PASS < ${state.threshold.tidakLulus.toFixed(2)}`]];
+  legend.forEach(([col, txt], i) => { ctx.fillStyle = col; ctx.fillRect(40, 80 + i * 22, 18, 14); ctx.fillStyle = '#0f172a'; ctx.font = '12px Inter, sans-serif'; ctx.fillText(txt, 64, 92 + i * 22); });
+  // Bars
+  const rows = sampleDepthRows();
+  const left = 60, right = c.width - 40, top = 170, bottom = c.height - 60;
+  const w = (right - left) / rows.length;
+  ctx.strokeStyle = '#e2e8f0'; ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, bottom); ctx.lineTo(right, bottom); ctx.stroke();
+  rows.forEach((r, i) => {
+    const h = ((r.depth - 1.4) / 2) * (bottom - top);
+    ctx.fillStyle = r.status === 'pass' ? '#10b981' : r.status === 'tol' ? '#f59e0b' : '#ef4444';
+    ctx.fillRect(left + i * w + 1, bottom - h, Math.max(2, w - 2), h);
+  });
+  // Threshold lines
+  const drawLine = (val, color) => {
+    const y = bottom - ((val - 1.4) / 2) * (bottom - top);
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+    ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+  };
+  drawLine(state.threshold.lulus, '#10b981'); drawLine(state.threshold.tidakLulus, '#ef4444');
+  ctx.setLineDash([]);
+
+  c.toBlob(blob => { downloadBlob(blob, 'KBN01-K02-chart.png', 'image/png'); toast('PNG chart di-generate & di-download.', 'ok'); }, 'image/png');
+}
+
+function handleExport(kind) {
+  if (kind === 'txt')  return exportTXT();
+  if (kind === 'csv')  return exportCSV();
+  if (kind === 'xlsx') return exportXLSX();
+  if (kind === 'png')  return exportPNG();
+}
+
+// ============================================================
+// FORM VALIDATION (undangan-baru)
+// ============================================================
+const VALIDATORS = {
+  orderNo: {
+    test: v => /^PAT-\d{4}-\d{4}$/.test(v.trim()),
+    okMsg:  '<i data-lucide="check" class="inline w-3 h-3"></i>Format valid',
+    errMsg: '<i data-lucide="alert-triangle" class="inline w-3 h-3"></i>Format harus <code>PAT-YYYY-NNNN</code>',
+  },
+  opNo: {
+    test: v => v.trim() === '0010',
+    okMsg:  '<i data-lucide="check" class="inline w-3 h-3"></i>OK · default 0010',
+    errMsg: '<i data-lucide="alert-triangle" class="inline w-3 h-3"></i>Warning: bukan default 0010 — pastikan sesuai SOP',
+    warnOnFail: true,
+  },
+};
+
+function attachValidators() {
+  document.querySelectorAll('[data-validate]').forEach(inp => {
+    if (inp.dataset.validatorAttached) return;
+    inp.dataset.validatorAttached = '1';
+    const key = inp.dataset.validate;
+    const v = VALIDATORS[key]; if (!v) return;
+    const msg = document.querySelector(`[data-msg="${key}"]`);
+    const run = () => {
+      const ok = v.test(inp.value);
+      inp.style.borderColor = ok ? '#10b981' : (v.warnOnFail ? '#f59e0b' : '#ef4444');
+      inp.style.boxShadow = ok ? '0 0 0 3px rgba(16,185,129,.15)' : (v.warnOnFail ? '0 0 0 3px rgba(245,158,11,.15)' : '0 0 0 3px rgba(239,68,68,.15)');
+      if (msg) {
+        msg.innerHTML = ok ? v.okMsg : v.errMsg;
+        msg.className = `text-[11px] mt-1 validate-msg ${ok ? 'text-emerald-600' : (v.warnOnFail ? 'text-amber-600' : 'text-rose-600')}`;
+        lucide.createIcons();
+      }
+    };
+    inp.addEventListener('input', run);
+    inp.addEventListener('blur',  run);
+    run();
+  });
+}
+
+// ============================================================
 // INIT
 // ============================================================
 function toggleConnectivity() {
@@ -1198,12 +1458,37 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Drop zones (re-attach after each route)
-  window.addEventListener('hashchange', () => setTimeout(attachDropZones, 50));
+  // Drop zones + page-specific hooks (re-attach after each route)
+  window.addEventListener('hashchange', () => setTimeout(() => {
+    attachDropZones();
+    attachValidators();
+    // Conflict trigger
+    const tcb = document.getElementById('trigger-conflict-btn');
+    if (tcb && !tcb.dataset.wired) { tcb.dataset.wired = '1'; tcb.addEventListener('click', triggerConflict); }
+    // Export buttons
+    document.querySelectorAll('[data-export]').forEach(b => {
+      if (b.dataset.wired) return; b.dataset.wired = '1';
+      b.addEventListener('click', () => handleExport(b.dataset.export));
+    });
+  }, 50));
+
+  // Live clock
+  tickClock(); setInterval(tickClock, 1000);
+  // Title badge initial
+  updateTitleBadge();
 
   refreshConnectivityUI();
   route();
-  attachDropZones();
+  setTimeout(() => {
+    attachDropZones();
+    attachValidators();
+    const tcb = document.getElementById('trigger-conflict-btn');
+    if (tcb && !tcb.dataset.wired) { tcb.dataset.wired = '1'; tcb.addEventListener('click', triggerConflict); }
+    document.querySelectorAll('[data-export]').forEach(b => {
+      if (b.dataset.wired) return; b.dataset.wired = '1';
+      b.addEventListener('click', () => handleExport(b.dataset.export));
+    });
+  }, 50);
 
   // Auto-trigger tour on first visit (only on dashboard)
   if (!state.tourSeen && (location.hash === '' || location.hash === '#/')) {

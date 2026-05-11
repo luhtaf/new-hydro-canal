@@ -45,6 +45,7 @@ demo/
 | `#/users` | **Operator & akun** (admin-only) — table dengan produktivitas, role, USV |
 | `#/reports` | **Reports & Analytics** (admin-only) — Chart.js line trend + bar per region + donut + tabel operator |
 | `#/audit` | **Audit log** (admin-only) — timeline siapa-apa-kapan dengan filter user/action |
+| `#/help` | **Bantuan** — shortcuts, glossary STA/tranducer/dll, FAQ, kontak |
 
 ## Role hierarchy
 
@@ -73,6 +74,12 @@ Toggle via role pill di top-right (di-persist ke localStorage). Operator yang ak
 - 🛡️ **Role switcher** — pill admin/operator di top-right, nav links hide/show, threshold form lock, persisted
 - 🎓 **Walkthrough tour** — 8-step overlay, auto-trigger first visit, ulang dari tombol Tour atau ⌘K → "tour"
 - 💬 **Confirmation modal** — destructive actions (reset lokal, dll) pakai dialog kustom, bukan native `confirm()`
+- ⏰ **Live clock** — jam ticking di top nav, hari/tanggal otomatis
+- ⚡ **Trigger konflik (demo)** — di `#/konflik` tombol "Trigger konflik baru" generate konflik real-time
+- 💾 **Real file export** — `#/qc` tombol TXT/CSV/PNG/Excel **beneran download file** (Excel pakai SheetJS, PNG pakai Canvas, dll)
+- ✅ **Form validation real-time** — di undangan baru, Order No pattern check + Operation No warning
+- 🔗 **Chain undangan → penugasan → QC** — link bi-directional: undangan detail tampil penugasan terkait, penugasan detail tampil "Dari undangan" + output QC, QC card tampil "Sumber: PAT-XXXX"
+- 🔢 **Browser tab badge** — `document.title` update sesuai jumlah notif unread (lihat tab browser)
 
 ## Catatan arsitektur (untuk diskusi)
 
