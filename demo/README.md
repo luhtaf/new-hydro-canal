@@ -6,19 +6,19 @@ SPA prototype untuk app ops baru yang membungkus QC processing existing sebagai 
 
 ```bash
 # Folder static — sajikan dengan server statis apa pun
-python3 -m http.server 8080 -d mockup
+python3 -m http.server 8080 -d demo
 # lalu buka http://localhost:8080
 ```
 
-Atau drag-drop folder `mockup/` ke Netlify (`https://app.netlify.com/drop`).
+Atau drag-drop folder `demo/` ke Netlify (`https://app.netlify.com/drop`).
 
 ## Struktur file
 
 ```
-mockup/
+demo/
 ├── index.html   — Struktur, template view, CDN imports
-├── style.css    — Custom styles + dark mode + print
-├── app.js       — Router, state, render, interaksi
+├── style.css    — Custom styles + dark mode + print + role + tour + modal
+├── app.js       — Router, state, render, interaksi, role hierarchy, tour
 └── README.md
 ```
 
@@ -41,7 +41,17 @@ mockup/
 | `#/konflik` | Resolusi konflik sync — pilih versi per dokumen / per field |
 | `#/distrik` | Distrik dikelompokkan per region |
 | `#/notifikasi` | Inbox notifikasi (unread badge di sidebar) |
-| `#/pengaturan` | Threshold slider live + toggle setting + reset lokal |
+| `#/pengaturan` | Threshold slider live (admin-only lock) + toggle setting + reset lokal |
+| `#/users` | **Operator & akun** (admin-only) — table dengan produktivitas, role, USV |
+| `#/reports` | **Reports & Analytics** (admin-only) — Chart.js line trend + bar per region + donut + tabel operator |
+| `#/audit` | **Audit log** (admin-only) — timeline siapa-apa-kapan dengan filter user/action |
+
+## Role hierarchy
+
+- **Operator** (default) — lihat dashboard personal, kalender, undangan (read), penugasan saya, lapangan, QC, notif, peta. Pengaturan threshold di-lock.
+- **Admin / Manager** — semua di atas + buat undangan, manage operator, reports, audit log, distrik & region, edit threshold.
+
+Toggle via role pill di top-right (di-persist ke localStorage). Operator yang akses URL admin-only (mis. `#/users`) di-redirect ke "Akses terbatas" page dengan tombol switch.
 
 ## Interaksi yang beneran jalan
 
@@ -60,6 +70,9 @@ mockup/
 - 🔔 **Notifikasi inbox** — klik notif tandai dibaca, badge di sidebar update
 - 🔄 **Force sync** — pengiriman antrian saat online
 - 📱 **Mobile responsive** — bottom tab nav (Home/Kalender/Tugas/Peta/Akun) + sidebar collapse
+- 🛡️ **Role switcher** — pill admin/operator di top-right, nav links hide/show, threshold form lock, persisted
+- 🎓 **Walkthrough tour** — 8-step overlay, auto-trigger first visit, ulang dari tombol Tour atau ⌘K → "tour"
+- 💬 **Confirmation modal** — destructive actions (reset lokal, dll) pakai dialog kustom, bukan native `confirm()`
 
 ## Catatan arsitektur (untuk diskusi)
 
@@ -69,10 +82,9 @@ mockup/
 
 ## Hal yang belum di-mockup (sengaja)
 
-- User/role management page (admin)
 - Approval flow undangan (siapa approve sebelum assign)
 - Form tambah/edit distrik (cuma list view)
-- Real auth/permission gating
+- Real auth/permission gating (mock pakai role state lokal)
 - Map editing (placing pin manual)
 - Multi-user presence indicator
 

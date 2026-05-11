@@ -77,12 +77,14 @@
         <span class="hidden sm:inline">Sinkron</span>
         <span id="queue-badge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center">0</span>
       </button>
-      <div class="hidden md:flex items-center gap-2 ml-1 pl-3 border-l border-slate-200">
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-xs font-bold">FA</div>
-        <div class="text-xs leading-tight">
-          <div class="font-semibold text-slate-900">Fathul A.</div>
-          <div class="text-slate-500">QC Operator · KBN01</div>
+      <button id="tour-btn" class="btn btn-ghost text-xs hidden md:inline-flex" title="Walkthrough"><i data-lucide="presentation" class="w-3.5 h-3.5"></i><span class="hidden lg:inline">Tour</span></button>
+      <div id="role-switcher" class="role-pill operator hidden md:inline-flex ml-1 cursor-pointer" title="Klik untuk ganti role (demo)">
+        <span class="role-icon"><i data-lucide="user" class="w-3 h-3"></i></span>
+        <div class="flex flex-col items-start leading-tight">
+          <span id="role-label">Operator</span>
+          <span class="text-[10px] font-normal opacity-70" id="role-sub">KBN01 · Fathul</span>
         </div>
+        <i data-lucide="chevrons-up-down" class="w-3 h-3 opacity-60"></i>
       </div>
     </div>
   </div>
@@ -96,9 +98,14 @@
       <a href="#/" class="nav-link" data-route="/"><i data-lucide="layout-dashboard"></i>Dashboard</a>
       <a href="#/kalender" class="nav-link" data-route="/kalender"><i data-lucide="calendar-days"></i>Kalender</a>
       <a href="#/undangan" class="nav-link" data-route="/undangan"><i data-lucide="mail"></i>Undangan QC</a>
-      <a href="#/undangan/baru" class="nav-link pl-7 text-[0.8125rem]" data-route="/undangan/baru"><i data-lucide="plus-circle"></i>Undangan baru</a>
+      <a href="#/undangan/baru" class="nav-link pl-7 text-[0.8125rem]" data-route="/undangan/baru" data-min-role="admin"><i data-lucide="plus-circle"></i>Undangan baru</a>
       <a href="#/penugasan" class="nav-link" data-route="/penugasan"><i data-lucide="clipboard-list"></i>Penugasan Saya</a>
       <a href="#/notifikasi" class="nav-link" data-route="/notifikasi"><i data-lucide="bell"></i>Notifikasi <span id="notif-nav-badge" class="hidden ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-brand-500 text-white text-[10px] font-bold">0</span></a>
+
+      <div class="px-3 pt-4 pb-1.5 text-[11px] uppercase tracking-wider font-semibold text-slate-400" data-min-role="admin">Manajemen</div>
+      <a href="#/users" class="nav-link" data-route="/users" data-min-role="admin"><i data-lucide="users"></i>Operator &amp; akun</a>
+      <a href="#/reports" class="nav-link" data-route="/reports" data-min-role="admin"><i data-lucide="bar-chart-3"></i>Reports</a>
+      <a href="#/audit" class="nav-link" data-route="/audit" data-min-role="admin"><i data-lucide="scroll-text"></i>Audit log</a>
 
       <div class="px-3 pt-4 pb-1.5 text-[11px] uppercase tracking-wider font-semibold text-slate-400">Lapangan</div>
       <a href="#/lapangan/parameter" class="nav-link" data-route="/lapangan/parameter"><i data-lucide="form-input"></i>Input Parameter</a>
@@ -108,7 +115,7 @@
       <div class="px-3 pt-4 pb-1.5 text-[11px] uppercase tracking-wider font-semibold text-slate-400">QC</div>
       <a href="#/qc" class="nav-link" data-route="/qc"><i data-lucide="line-chart"></i>QC Processing</a>
       <a href="#/konflik" class="nav-link" data-route="/konflik"><i data-lucide="git-merge"></i>Konflik sync <span class="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold">2</span></a>
-      <a href="#/distrik" class="nav-link" data-route="/distrik"><i data-lucide="map-pinned"></i>Distrik &amp; Region</a>
+      <a href="#/distrik" class="nav-link" data-route="/distrik" data-min-role="admin"><i data-lucide="map-pinned"></i>Distrik &amp; Region</a>
       <a href="#/pengaturan" class="nav-link" data-route="/pengaturan"><i data-lucide="settings"></i>Pengaturan</a>
 
       <div class="mt-6 p-3 rounded-xl bg-gradient-to-br from-brand-50 to-white border border-brand-100">
@@ -800,8 +807,11 @@
     <header><h1 class="text-2xl font-bold tracking-tight">Pengaturan</h1><p class="text-sm text-slate-600 mt-1">Threshold QC, profil, &amp; perangkat.</p></header>
     <div class="grid lg:grid-cols-2 gap-4">
       <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
-        <div class="p-4 border-b border-slate-100 sec-title">Threshold pengukuran</div>
-        <div class="p-4 space-y-4 text-sm">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="sec-title">Threshold pengukuran</div>
+          <span class="lock-badge role-operator-only"><i data-lucide="lock" class="w-3 h-3"></i>Admin-only</span>
+        </div>
+        <div class="p-4 space-y-4 text-sm" data-lock="admin">
           <div>
             <label class="text-xs font-semibold text-slate-700 flex justify-between">Lulus ≥ (m) <span class="text-brand-600 font-mono">live</span></label>
             <input type="range" id="th-slider" class="range-brand w-full mt-2" min="1500" max="3500" step="50" value="2500" />
@@ -849,6 +859,126 @@
   </div>
 </template>
 
+<template id="view-no-access">
+  <div class="min-h-[60vh] grid place-items-center">
+    <div class="empty-state max-w-md">
+      <div class="empty-state-icon" style="background:#fef3c7;color:#92400e"><i data-lucide="lock" class="w-8 h-8"></i></div>
+      <h2 class="text-xl font-bold tracking-tight">Akses terbatas</h2>
+      <p class="text-sm text-slate-600 mt-2">Halaman ini hanya untuk role <b>Admin / Manager</b>. Kamu sedang masuk sebagai <b id="no-access-role">Operator</b>.</p>
+      <div class="flex gap-2 justify-center mt-5">
+        <a href="#/" class="btn btn-ghost">Kembali</a>
+        <button class="btn btn-primary" onclick="setRole('admin')"><i data-lucide="shield-check" class="w-4 h-4"></i>Beralih ke Admin (demo)</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-users">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Operator &amp; akun</h1><p class="text-sm text-slate-600 mt-1">Kelola pengguna, role, dan penugasan USV.</p></div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost"><i data-lucide="download" class="w-4 h-4"></i>Export</button>
+        <button class="btn btn-primary" onclick="confirmDialog({title:'Tambah operator',body:'Form tambah operator akan terbuka. (Demo)',confirm:'Lanjut',onConfirm:()=>toast('Operator baru dibuat (demo)','ok')})"><i data-lucide="user-plus" class="w-4 h-4"></i>Tambah operator</button>
+      </div>
+    </header>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total operator</div><div class="mt-2 text-3xl font-bold tracking-tight">7</div><div class="mt-1 text-xs text-slate-500">5 aktif · 2 cuti</div></div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</div><div class="mt-2 text-3xl font-bold tracking-tight">2</div><div class="mt-1 text-xs text-slate-500">1 manager · 1 super admin</div></div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">USV terpasang</div><div class="mt-2 text-3xl font-bold tracking-tight">5</div><div class="mt-1 text-xs text-slate-500">KBN01–KBN05</div></div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rata-rata produktivitas</div><div class="mt-2 text-3xl font-bold tracking-tight">8.4<span class="text-base font-medium text-slate-400">/hr</span></div><div class="mt-1 text-xs text-emerald-600 font-medium">+12% bulan ini</div></div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden">
+      <div class="p-3 border-b border-slate-100 flex flex-wrap gap-2 items-center">
+        <div class="flex-1 min-w-[200px] relative"><i data-lucide="search" class="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400"></i><input class="input pl-9 input-sm" placeholder="Cari nama, USV, role…" /></div>
+        <div class="inline-flex bg-slate-50 border border-slate-200 rounded-lg p-0.5"><button class="px-3 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-soft">Semua</button><button class="px-3 py-1 rounded-md text-xs font-semibold text-slate-600">Admin</button><button class="px-3 py-1 rounded-md text-xs font-semibold text-slate-600">Operator</button></div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+            <tr><th class="text-left px-4 py-2.5">User</th><th class="text-left px-4 py-2.5">Role</th><th class="text-left px-4 py-2.5">USV</th><th class="text-left px-4 py-2.5">Status</th><th class="text-left px-4 py-2.5">Produktivitas (30d)</th><th class="text-left px-4 py-2.5">Terakhir aktif</th><th class="text-left px-4 py-2.5 w-12"></th></tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100" id="users-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-reports">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Reports &amp; Analytics</h1><p class="text-sm text-slate-600 mt-1">Insight pass rate, produktivitas, dan distribusi kualitas QC.</p></div>
+      <div class="flex gap-2">
+        <div class="inline-flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-soft"><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">7 hari</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold bg-brand-50 text-brand-700">30 hari</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">90 hari</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">Custom</button></div>
+        <button class="btn btn-ghost"><i data-lucide="download" class="w-4 h-4"></i>Export</button>
+      </div>
+    </header>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total QC</div><div class="mt-2 text-3xl font-bold tracking-tight">163</div><div class="mt-1 text-xs text-emerald-600 font-medium flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i>+24 vs periode lalu</div></div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pass rate rata-rata</div><div class="mt-2 text-3xl font-bold tracking-tight text-emerald-600">87.1<span class="text-base font-medium text-slate-400">%</span></div><div class="mt-1 text-xs text-emerald-600 font-medium">+3.2% mom</div></div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Re-QC ratio</div><div class="mt-2 text-3xl font-bold tracking-tight text-amber-600">6.8<span class="text-base font-medium text-slate-400">%</span></div><div class="mt-1 text-xs text-rose-600 font-medium">+1.1% mom</div></div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rata-rata waktu QC</div><div class="mt-2 text-3xl font-bold tracking-tight">3.4<span class="text-base font-medium text-slate-400">h</span></div><div class="mt-1 text-xs text-slate-500">per kanal</div></div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+        <div class="flex items-center justify-between mb-2"><div class="sec-title">Pass rate trend</div><div class="text-xs text-slate-500">30 hari terakhir</div></div>
+        <div style="height:220px"><canvas id="report-trend"></canvas></div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+        <div class="flex items-center justify-between mb-2"><div class="sec-title">Per region</div><div class="text-xs text-slate-500">% pass rate</div></div>
+        <div style="height:220px"><canvas id="report-region"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100 sec-title">Produktivitas operator</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-semibold"><tr><th class="text-left px-4 py-2.5">Operator</th><th class="text-left px-4 py-2.5">USV</th><th class="text-left px-4 py-2.5">Kanal/30d</th><th class="text-left px-4 py-2.5">Pass rate</th><th class="text-left px-4 py-2.5">Re-QC</th><th class="text-left px-4 py-2.5">Distribusi</th></tr></thead>
+            <tbody class="divide-y divide-slate-100" id="report-ops"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+        <div class="sec-title mb-3">Breakdown kualitas</div>
+        <div style="height:220px"><canvas id="report-donut"></canvas></div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+          <div><div class="font-bold text-emerald-600">142</div><div class="text-slate-500">pass</div></div>
+          <div><div class="font-bold text-amber-600">17</div><div class="text-slate-500">tol</div></div>
+          <div><div class="font-bold text-rose-600">4</div><div class="text-slate-500">fail</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-audit">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Audit log</h1><p class="text-sm text-slate-600 mt-1">Riwayat semua aksi penting — siapa, apa, kapan, target.</p></div>
+      <div class="flex gap-2"><button class="btn btn-ghost"><i data-lucide="download" class="w-4 h-4"></i>Export CSV</button></div>
+    </header>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-3">
+      <div class="flex flex-wrap gap-2 items-center">
+        <div class="flex-1 min-w-[200px] relative"><i data-lucide="search" class="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400"></i><input id="audit-search" class="input pl-9 input-sm" placeholder="Cari user, aksi, target…" /></div>
+        <select class="input input-sm w-auto"><option>Semua user</option><option>Fathul A.</option><option>Andi S.</option><option>Rendi H.</option><option>Admin Manager</option></select>
+        <select id="audit-action-filter" class="input input-sm w-auto"><option value="">Semua aksi</option><option value="assign">Assign</option><option value="edit">Edit</option><option value="sync">Sync</option><option value="threshold">Threshold</option><option value="login">Login</option></select>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+      <div class="p-2" id="audit-list"></div>
+    </div>
+  </div>
+</template>
+
 <template id="view-404">
   <div class="min-h-[60vh] grid place-items-center text-center">
     <div>
@@ -858,6 +988,27 @@
     </div>
   </div>
 </template>
+
+<!-- Walkthrough overlay -->
+<div id="tour" class="hidden">
+  <div class="tour-backdrop"></div>
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-card" id="tour-card">
+    <div class="flex items-center justify-between"><span class="tour-step"><span id="tour-step-num">1</span> dari <span id="tour-step-total">8</span></span><button onclick="endTour()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <h3 id="tour-title"></h3>
+    <p id="tour-body"></p>
+    <div class="flex items-center justify-between mt-2">
+      <div class="tour-dots" id="tour-dots"></div>
+      <div class="flex gap-1">
+        <button id="tour-prev" class="btn btn-ghost text-xs">Sebelumnya</button>
+        <button id="tour-next" class="btn btn-primary text-xs">Lanjut <i data-lucide="arrow-right" class="w-3 h-3"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation modal mount -->
+<div id="modal-root"></div>
 
 <script src="app.js"></script>
 </body>

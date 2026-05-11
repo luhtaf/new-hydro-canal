@@ -40,6 +40,35 @@ const MOCK = {
     { id: 'n5', kind: 'threshold',icon: 'settings-2',     color: 'amber',   title: 'Threshold pengukuran diubah oleh admin',       body: 'lulus ≥ 2.5 (sebelumnya 2.4)', when: 'kemarin', read: true },
     { id: 'n6', kind: 'sync',     icon: 'cloud-check',    color: 'emerald', title: 'Backup harian berhasil',                       body: '847 dokumen · 14.2 MB', when: '2 hari lalu', read: true },
   ],
+  users: [
+    { id: 'u1', name: 'Fathul Akmal',        initials: 'FA', email: 'fathul@hydrocanal.id',  role: 'operator', usv: 'KBN01', status: 'aktif', kanal: 28, pass: 89, reqc: 5,  active: '2 menit lalu' },
+    { id: 'u2', name: 'Andi Saputra',        initials: 'AS', email: 'andi@hydrocanal.id',    role: 'operator', usv: 'KBN02', status: 'aktif', kanal: 34, pass: 92, reqc: 3,  active: '12 menit lalu' },
+    { id: 'u3', name: 'Rendi Hartono',       initials: 'RH', email: 'rendi@hydrocanal.id',   role: 'operator', usv: 'KBN03', status: 'cuti',  kanal: 8,  pass: 84, reqc: 11, active: '3 hari lalu' },
+    { id: 'u4', name: 'Sari Putri',          initials: 'SP', email: 'sari@hydrocanal.id',    role: 'operator', usv: 'KBN04', status: 'aktif', kanal: 22, pass: 86, reqc: 7,  active: '1 jam lalu' },
+    { id: 'u5', name: 'Budi Santoso',        initials: 'BS', email: 'budi@hydrocanal.id',    role: 'operator', usv: 'KBN05', status: 'aktif', kanal: 18, pass: 80, reqc: 9,  active: 'kemarin' },
+    { id: 'u6', name: 'Manager Operasional', initials: 'MO', email: 'manager@hydrocanal.id', role: 'admin',    usv: '—',     status: 'aktif', kanal: 0,  pass: 0,  reqc: 0,  active: '5 menit lalu' },
+    { id: 'u7', name: 'Super Admin',         initials: 'SA', email: 'admin@hydrocanal.id',   role: 'admin',    usv: '—',     status: 'aktif', kanal: 0,  pass: 0,  reqc: 0,  active: 'sekarang' },
+  ],
+  regionStats: [
+    { name: 'PT. Ciptamas BS',   pass: 91, qc: 58 },
+    { name: 'PT. Musi Nauli',    pass: 86, qc: 47 },
+    { name: 'PT. Sumber Hijau',  pass: 83, qc: 38 },
+    { name: 'PT. Lainnya',       pass: 88, qc: 20 },
+  ],
+  trendPassRate: [78,81,79,83,85,82,84,86,84,87,85,88,86,87,89,87,88,90,88,87,89,91,89,87,88,90,88,87,89,87],
+  audit: [
+    { id: 'a1',  user: 'Fathul A.',   uIcon: 'FA', uColor: 'brand',   action: 'edit',      kind: 'Drag-edit kedalaman',      target: 'KBN01-K02 · STA 720', detail: '2.710 → 2.840',     when: 'baru saja',     date: '11 Mei 14:22' },
+    { id: 'a2',  user: 'Andi S.',     uIcon: 'AS', uColor: 'emerald', action: 'sync',      kind: 'Sinkronisasi',             target: '3C01-251114-KBN01',   detail: '24 dokumen',        when: '5 menit lalu',  date: '11 Mei 14:17' },
+    { id: 'a3',  user: 'Manager Op.', uIcon: 'MO', uColor: 'amber',   action: 'assign',    kind: 'Assign petugas',           target: 'PAT-2026-0042',       detail: '→ Fathul A.',       when: '15 menit lalu', date: '11 Mei 14:07' },
+    { id: 'a4',  user: 'Super Admin', uIcon: 'SA', uColor: 'rose',    action: 'threshold', kind: 'Ubah threshold',           target: 'Pengaturan',          detail: 'lulus 2.4 → 2.5',   when: '1 jam lalu',    date: '11 Mei 13:22' },
+    { id: 'a5',  user: 'Andi S.',     uIcon: 'AS', uColor: 'emerald', action: 'edit',      kind: 'Edit parameter',           target: 'KBN01-K02',           detail: 'water_level 2.18',  when: '2 jam lalu',    date: '11 Mei 12:18' },
+    { id: 'a6',  user: 'Fathul A.',   uIcon: 'FA', uColor: 'brand',   action: 'login',     kind: 'Login',                    target: 'Web',                 detail: 'KBN01',             when: '3 jam lalu',    date: '11 Mei 11:00' },
+    { id: 'a7',  user: 'Manager Op.', uIcon: 'MO', uColor: 'amber',   action: 'edit',      kind: 'Buat undangan',            target: 'PAT-2026-0042',       detail: '6 kanal',           when: 'kemarin',       date: '10 Mei 14:22' },
+    { id: 'a8',  user: 'Sari P.',     uIcon: 'SP', uColor: 'rose',    action: 'sync',      kind: 'Konflik diselesaikan',     target: 'KBN04-K07',           detail: 'pakai versi lokal', when: 'kemarin',       date: '10 Mei 11:48' },
+    { id: 'a9',  user: 'Super Admin', uIcon: 'SA', uColor: 'rose',    action: 'edit',      kind: 'Tambah operator',          target: 'Sari Putri',          detail: 'role operator',     when: '2 hari lalu',   date: '09 Mei 09:12' },
+    { id: 'a10', user: 'Budi S.',     uIcon: 'BS', uColor: 'amber',   action: 'edit',      kind: 'Drag-edit kedalaman',      target: 'KBN05-K02 · STA 320', detail: '2.450 → 2.620',     when: '2 hari lalu',   date: '09 Mei 08:48' },
+    { id: 'a11', user: 'Rendi H.',    uIcon: 'RH', uColor: 'rose',    action: 'login',     kind: 'Login',                    target: 'Web',                 detail: 'KBN03',             when: '3 hari lalu',   date: '08 Mei 09:02' },
+  ],
   events: { // hari → kind
     11: 'pen', 12: 'pen', 13: 'dl', 14: 'und', 15: 'und', 20: 'pen', 22: 'dl', 27: 'und'
   },
@@ -69,9 +98,12 @@ const state = {
   threshold:    store.get('threshold', { lulus: 2.5, tidakLulus: 2.0, batasAwal: 2.0, batasAkhir: 2.5 }),
   settings:     store.get('settings', { autoSync: true, adminOnlyEdit: true }),
   theme:        store.get('theme', 'light'),
+  role:         store.get('role', 'operator'),
+  tourSeen:     store.get('tourSeen', false),
   isOnline:     true,
   selectedDay:  null,
   undanganFilter: { q: '', status: 'semua' },
+  auditFilter:  { q: '', action: '' },
   depthEdits:   store.get('depthEdits', {}),
   notifications: store.get('notifications', MOCK.notifications),
   map:          null,
@@ -82,6 +114,8 @@ function persist() {
   store.set('threshold', state.threshold);
   store.set('settings', state.settings);
   store.set('theme', state.theme);
+  store.set('role', state.role);
+  store.set('tourSeen', state.tourSeen);
   store.set('depthEdits', state.depthEdits);
   store.set('notifications', state.notifications);
 }
@@ -92,7 +126,6 @@ const routes = {
   '/':                      { tpl: 'view-dashboard',              after: renderDashboard },
   '/kalender':              { tpl: 'view-kalender',               after: renderCalendar },
   '/undangan':              { tpl: 'view-undangan',               after: renderUndangan },
-  '/undangan/baru':         { tpl: 'view-undangan-baru' },
   '/undangan/detail':       { tpl: 'view-undangan-detail' },
   '/penugasan':             { tpl: 'view-penugasan',              after: renderPenugasan },
   '/penugasan/detail':      { tpl: 'view-penugasan-detail',       after: renderPenugasanDetail },
@@ -101,18 +134,30 @@ const routes = {
   '/qc':                    { tpl: 'view-qc',                     after: renderMiniCharts },
   '/konflik':               { tpl: 'view-konflik' },
   '/peta':                  { tpl: 'view-peta',                   after: renderMap },
-  '/distrik':               { tpl: 'view-distrik' },
+  '/distrik':               { tpl: 'view-distrik',                role: 'admin' },
   '/notifikasi':            { tpl: 'view-notifikasi',             after: renderNotifikasi },
   '/pengaturan':            { tpl: 'view-pengaturan',             after: renderPengaturan },
+  '/users':                 { tpl: 'view-users',                  role: 'admin', after: renderUsers },
+  '/reports':               { tpl: 'view-reports',                role: 'admin', after: renderReports },
+  '/audit':                 { tpl: 'view-audit',                  role: 'admin', after: renderAudit },
+  '/undangan/baru':         { tpl: 'view-undangan-baru',          role: 'admin' },
 };
 
 function route() {
   const hash = location.hash.replace(/^#/, '') || '/';
-  const r = routes[hash] || { tpl: 'view-404' };
+  let r = routes[hash] || { tpl: 'view-404' };
+  // Role gating
+  if (r.role === 'admin' && state.role !== 'admin') {
+    r = { tpl: 'view-no-access', chrome: r.chrome };
+  }
   const tpl = document.getElementById(r.tpl);
   const view = document.getElementById('view');
   view.innerHTML = '';
   if (tpl) view.appendChild(tpl.content.cloneNode(true));
+  if (r.tpl === 'view-no-access') {
+    const el = document.getElementById('no-access-role');
+    if (el) el.textContent = state.role === 'admin' ? 'Admin' : 'Operator';
+  }
   const showChrome = r.chrome !== false;
   document.getElementById('topnav').style.display = showChrome ? '' : 'none';
   const sb = document.querySelector('#layout aside');
@@ -571,9 +616,16 @@ function renderPengaturan() {
   // Reset local
   const resetBtn = document.getElementById('reset-local-btn');
   if (resetBtn) resetBtn.onclick = () => {
-    if (!confirm('Hapus semua data lokal? Tidak bisa di-undo.')) return;
-    Object.keys(localStorage).filter(k => k.startsWith(STORAGE_NS)).forEach(k => localStorage.removeItem(k));
-    location.reload();
+    confirmDialog({
+      title: 'Hapus semua data lokal?',
+      body: 'Semua draft, threshold, queue, dan edit lokal akan hilang. Tidak bisa di-undo.',
+      confirm: 'Ya, hapus',
+      danger: true,
+      onConfirm: () => {
+        Object.keys(localStorage).filter(k => k.startsWith(STORAGE_NS)).forEach(k => localStorage.removeItem(k));
+        location.reload();
+      },
+    });
   };
 }
 
@@ -693,6 +745,11 @@ const CMD_ITEMS = [
   { id: 'distrik', label: 'Distrik & Region',           icon: 'map-pinned',       go: '#/distrik' },
   { id: 'notif',   label: 'Notifikasi',                 icon: 'bell',             go: '#/notifikasi' },
   { id: 'set',     label: 'Pengaturan',                 icon: 'settings',         go: '#/pengaturan' },
+  { id: 'usr',     label: 'Operator & akun (admin)',    icon: 'users',            go: '#/users' },
+  { id: 'rep',     label: 'Reports & Analytics (admin)',icon: 'bar-chart-3',      go: '#/reports' },
+  { id: 'aud',     label: 'Audit log (admin)',          icon: 'scroll-text',      go: '#/audit' },
+  { id: 'role',    label: 'Ganti role (admin/operator)',icon: 'shield-check',     action: () => toggleRole() },
+  { id: 'tour',    label: 'Mulai walkthrough tour',     icon: 'presentation',     action: () => startTour() },
   { id: 'theme',   label: 'Toggle dark mode',           icon: 'sun-moon',         action: () => toggleTheme() },
   { id: 'conn',    label: 'Toggle offline/online',      icon: 'wifi-off',         action: () => toggleConnectivity() },
   { id: 'sync',    label: 'Sinkron sekarang',           icon: 'refresh-cw',       action: () => forceSyncAll() },
@@ -808,6 +865,262 @@ function attachDropZones() {
 }
 
 // ============================================================
+// ROLE HIERARCHY
+// ============================================================
+function applyRole() {
+  document.body.classList.toggle('role-admin',    state.role === 'admin');
+  document.body.classList.toggle('role-operator', state.role === 'operator');
+  const sw = document.getElementById('role-switcher');
+  const lbl = document.getElementById('role-label');
+  const sub = document.getElementById('role-sub');
+  if (sw) {
+    sw.classList.remove('admin', 'operator');
+    sw.classList.add(state.role);
+    const icon = sw.querySelector('.role-icon i');
+    if (icon) icon.setAttribute('data-lucide', state.role === 'admin' ? 'shield-check' : 'user');
+  }
+  if (lbl) lbl.textContent = state.role === 'admin' ? 'Admin' : 'Operator';
+  if (sub) sub.textContent = state.role === 'admin' ? 'Manager · semua akses' : 'KBN01 · Fathul';
+  // Apply lock overlay on admin-only fields when in operator
+  document.querySelectorAll('[data-lock="admin"]').forEach(el => {
+    el.classList.toggle('lock-overlay', state.role !== 'admin');
+  });
+  lucide.createIcons();
+}
+
+window.setRole = (r) => {
+  if (state.role === r) return;
+  state.role = r; persist(); applyRole();
+  toast(`Role diganti → ${r === 'admin' ? 'Admin' : 'Operator'}`, 'ok');
+  // Re-route in case current page is now restricted
+  route();
+};
+
+function toggleRole() { setRole(state.role === 'admin' ? 'operator' : 'admin'); }
+
+// ============================================================
+// USERS PAGE
+// ============================================================
+function renderUsers() {
+  const wrap = document.getElementById('users-rows');
+  if (!wrap) return;
+  wrap.innerHTML = MOCK.users.map(u => {
+    const roleColor = u.role === 'admin' ? 'amber' : 'brand';
+    const stColor   = u.status === 'aktif' ? 'emerald' : 'slate';
+    return `<tr class="table-row">
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-${roleColor}-500 to-${roleColor}-700 grid place-items-center text-white text-xs font-bold">${u.initials}</div>
+          <div><div class="font-semibold">${u.name}</div><div class="text-xs text-slate-500">${u.email}</div></div>
+        </div>
+      </td>
+      <td class="px-4 py-3"><span class="badge bg-${roleColor}-50 text-${roleColor}-700"><i data-lucide="${u.role === 'admin' ? 'shield-check' : 'user'}" class="w-3 h-3"></i>${u.role}</span></td>
+      <td class="px-4 py-3 font-mono text-xs">${u.usv}</td>
+      <td class="px-4 py-3"><span class="badge bg-${stColor}-50 text-${stColor}-700"><span class="badge-dot bg-${stColor}-500"></span>${u.status}</span></td>
+      <td class="px-4 py-3">${u.kanal > 0 ? `<div class="flex items-center gap-2"><div class="font-semibold">${u.kanal}</div><div class="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width:${u.pass}%"></div></div><div class="text-xs text-emerald-700 font-semibold">${u.pass}%</div></div>` : '<span class="text-slate-300">—</span>'}</td>
+      <td class="px-4 py-3 text-xs text-slate-500">${u.active}</td>
+      <td class="px-4 py-3"><button class="p-1.5 rounded hover:bg-slate-100"><i data-lucide="more-horizontal" class="w-4 h-4 text-slate-400"></i></button></td>
+    </tr>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+// ============================================================
+// REPORTS PAGE
+// ============================================================
+function renderReports() {
+  // Trend line
+  setTimeout(() => {
+    if (!window.Chart) return;
+    if (window._reportTrend) { try { window._reportTrend.destroy(); } catch {} }
+    if (window._reportRegion) { try { window._reportRegion.destroy(); } catch {} }
+    if (window._reportDonut) { try { window._reportDonut.destroy(); } catch {} }
+
+    const trendCanvas = document.getElementById('report-trend');
+    if (trendCanvas) {
+      const labels = MOCK.trendPassRate.map((_, i) => i % 5 === 0 ? `H-${30 - i}` : '');
+      window._reportTrend = new Chart(trendCanvas.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets: [{
+          data: MOCK.trendPassRate, borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,.12)', fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2.5,
+        }]},
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ displayColors:false, callbacks:{ label: ctx => `${ctx.parsed.y}% pass` } } },
+          scales:{ x:{ ticks:{ font:{size:10}}, grid:{display:false}}, y:{ min:70, max:100, ticks:{ font:{size:10}, callback: v=>v+'%' }, grid:{ color:'rgba(148,163,184,.15)'}}} }
+      });
+    }
+
+    const regionCanvas = document.getElementById('report-region');
+    if (regionCanvas) {
+      window._reportRegion = new Chart(regionCanvas.getContext('2d'), {
+        type: 'bar',
+        data: { labels: MOCK.regionStats.map(r=>r.name.replace('PT. ','')),
+          datasets: [{ data: MOCK.regionStats.map(r=>r.pass),
+            backgroundColor: MOCK.regionStats.map(r => r.pass >= 90 ? '#10b981' : r.pass >= 85 ? '#0ea5e9' : '#f59e0b'),
+            borderRadius: 6, barPercentage: 0.7, categoryPercentage: 0.8 }]
+        },
+        options: { responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{ legend:{display:false}, tooltip:{ displayColors:false, callbacks:{ label: ctx => `${ctx.parsed.x}% (${MOCK.regionStats[ctx.dataIndex].qc} QC)` } } },
+          scales:{ x:{ min:70, max:100, ticks:{ font:{size:10}, callback: v=>v+'%' }, grid:{ color:'rgba(148,163,184,.15)' }}, y:{ ticks:{ font:{size:11}}, grid:{ display:false }} } }
+      });
+    }
+
+    const donutCanvas = document.getElementById('report-donut');
+    if (donutCanvas) {
+      window._reportDonut = new Chart(donutCanvas.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['Pass', 'Tolerance', 'Fail'], datasets: [{ data: [142, 17, 4], backgroundColor: ['#10b981','#f59e0b','#ef4444'], borderWidth: 0, hoverOffset: 6 }] },
+        options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{display:false}, tooltip:{ displayColors:false } } }
+      });
+    }
+  }, 50);
+
+  // Operator productivity rows
+  const opsWrap = document.getElementById('report-ops');
+  if (opsWrap) {
+    const operators = MOCK.users.filter(u => u.role === 'operator');
+    opsWrap.innerHTML = operators.map(u => `<tr class="table-row">
+      <td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-[10px] font-bold">${u.initials}</div><div class="font-semibold text-sm">${u.name}</div></div></td>
+      <td class="px-4 py-3 font-mono text-xs">${u.usv}</td>
+      <td class="px-4 py-3 font-semibold">${u.kanal}</td>
+      <td class="px-4 py-3"><span class="badge bg-emerald-50 text-emerald-700">${u.pass}%</span></td>
+      <td class="px-4 py-3"><span class="badge bg-amber-50 text-amber-700">${u.reqc}%</span></td>
+      <td class="px-4 py-3 w-32"><div class="h-1.5 bg-slate-100 rounded-full overflow-hidden flex"><div class="h-full bg-emerald-500" style="width:${u.pass}%"></div><div class="h-full bg-amber-500" style="width:${u.reqc}%"></div></div></td>
+    </tr>`).join('');
+    lucide.createIcons();
+  }
+}
+
+// ============================================================
+// AUDIT LOG PAGE
+// ============================================================
+function renderAudit() {
+  const wrap = document.getElementById('audit-list');
+  if (!wrap) return;
+  const f = state.auditFilter;
+  const q = (f.q || '').toLowerCase();
+  const items = MOCK.audit.filter(a => {
+    if (f.action && a.action !== f.action) return false;
+    if (q && !(a.user.toLowerCase().includes(q) || a.kind.toLowerCase().includes(q) || a.target.toLowerCase().includes(q) || (a.detail || '').toLowerCase().includes(q))) return false;
+    return true;
+  });
+  if (items.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i data-lucide="search-x" class="w-7 h-7"></i></div><div class="font-semibold">Tidak ada log yang cocok</div><div class="text-sm text-slate-500 mt-1">Coba ubah filter atau kata kunci.</div></div>`;
+  } else {
+    const actionIcon = { edit: 'pencil', sync: 'cloud-upload', assign: 'user-plus', threshold: 'settings-2', login: 'log-in' };
+    const actionColor = { edit: 'brand', sync: 'emerald', assign: 'amber', threshold: 'rose', login: 'slate' };
+    wrap.innerHTML = items.map(a => {
+      const ic = actionIcon[a.action] || 'activity';
+      const ac = actionColor[a.action] || 'slate';
+      return `<div class="audit-row" data-audit="${a.id}">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-${a.uColor}-500 to-${a.uColor}-700 grid place-items-center text-white text-[10px] font-bold">${a.uIcon}</div>
+        <div class="text-xs text-slate-500 font-mono">${a.date}</div>
+        <div class="min-w-0">
+          <div class="text-sm"><b>${a.user}</b> <span class="text-slate-500">·</span> ${a.kind} <span class="text-slate-500">→</span> <span class="font-mono text-xs">${a.target}</span></div>
+          <div class="text-xs text-slate-500 mt-0.5">${a.detail || ''}</div>
+        </div>
+        <span class="badge bg-${ac}-50 text-${ac}-700"><i data-lucide="${ic}" class="w-3 h-3"></i>${a.action}</span>
+      </div>`;
+    }).join('');
+  }
+  const totalEl = document.getElementById('audit-total');
+  if (totalEl) totalEl.textContent = `${items.length} / ${MOCK.audit.length}`;
+  lucide.createIcons();
+}
+
+// ============================================================
+// CONFIRMATION MODAL
+// ============================================================
+window.confirmDialog = ({ title, body, confirm = 'Lanjut', danger = false, onConfirm }) => {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-card">
+      <div class="p-5 pb-3">
+        <div class="font-bold text-lg">${title}</div>
+        <div class="text-sm text-slate-600 mt-1.5">${body}</div>
+      </div>
+      <div class="p-3 border-t border-slate-100 flex gap-2 justify-end">
+        <button class="btn btn-ghost" data-modal-close>Batal</button>
+        <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" id="modal-confirm-btn">${confirm}</button>
+      </div>
+    </div>
+  </div>`;
+  lucide.createIcons();
+  const close = () => { root.innerHTML = ''; };
+  document.querySelectorAll('[data-modal-close]').forEach(b => b.addEventListener('click', close));
+  document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target.id === 'modal-overlay') close(); });
+  document.getElementById('modal-confirm-btn').addEventListener('click', () => { close(); if (onConfirm) onConfirm(); });
+};
+
+// ============================================================
+// WALKTHROUGH TOUR
+// ============================================================
+const TOUR_STEPS = [
+  { sel: '#topnav a[href="#/"]',          title: 'Dashboard',         body: 'Mulai dari sini. Stat overview, penugasan minggu ini, dan status QC terbaru.',  go: '#/' },
+  { sel: '#cmdk-btn',                     title: 'Command palette ⌘K', body: 'Tekan ⌘K (atau Ctrl+K) buat jump cepat antar halaman dan jalanin perintah.' },
+  { sel: '#role-switcher',                title: 'Role hierarchy',    body: 'Klik untuk ganti Admin ↔ Operator. Nav links & permission akan menyesuaikan otomatis.' },
+  { sel: 'a[href="#/penugasan"]',         title: 'Penugasan saya',    body: 'Operator lihat assignment-nya di sini. Klik kartu untuk masuk ke detail + lokasi peta.', go: '#/penugasan' },
+  { sel: 'a[href="#/lapangan/kedalaman"]',title: 'Drag chart kedalaman', body: 'Di form input kedalaman, seret bar chart untuk koreksi titik — masuk antrian sync.', go: '#/lapangan/kedalaman' },
+  { sel: '#connectivity-toggle',          title: 'Offline simulator', body: 'Klik untuk simulasi sinyal hilang. Form tetap jalan, perubahan masuk antrian.', },
+  { sel: '#sync-drawer-btn',              title: 'Antrian sync',      body: 'Semua perubahan offline ada di sini. Akan otomatis terkirim saat online.' },
+  { sel: 'a[href="#/peta"]',              title: 'Peta penugasan',    body: 'Map view dengan pin per kanal & sample STA color-coded sesuai threshold.', go: '#/peta' },
+];
+let tourIdx = 0;
+
+function startTour() {
+  tourIdx = 0;
+  state.tourSeen = true; persist();
+  document.getElementById('tour').classList.remove('hidden');
+  document.getElementById('tour-step-total').textContent = TOUR_STEPS.length;
+  showTourStep();
+}
+
+function endTour() {
+  document.getElementById('tour').classList.add('hidden');
+}
+
+function showTourStep() {
+  const step = TOUR_STEPS[tourIdx];
+  if (!step) { endTour(); return; }
+  document.getElementById('tour-step-num').textContent = tourIdx + 1;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-body').textContent = step.body;
+  const dots = document.getElementById('tour-dots');
+  dots.innerHTML = TOUR_STEPS.map((_, i) => `<span class="tour-dot ${i === tourIdx ? 'active' : ''}"></span>`).join('');
+  document.getElementById('tour-prev').disabled = tourIdx === 0;
+  document.getElementById('tour-prev').style.opacity = tourIdx === 0 ? '.4' : '1';
+  document.getElementById('tour-next').innerHTML = tourIdx === TOUR_STEPS.length - 1
+    ? 'Selesai <i data-lucide="check" class="w-3 h-3"></i>'
+    : 'Lanjut <i data-lucide="arrow-right" class="w-3 h-3"></i>';
+  lucide.createIcons();
+
+  if (step.go && location.hash !== step.go) location.hash = step.go;
+
+  setTimeout(() => {
+    const target = document.querySelector(step.sel);
+    const spot = document.getElementById('tour-spotlight');
+    const card = document.getElementById('tour-card');
+    if (!target) { spot.style.opacity = '0'; card.style.left = '50%'; card.style.top = '40%'; card.style.transform = 'translate(-50%,-50%)'; return; }
+    spot.style.opacity = '1';
+    const r = target.getBoundingClientRect();
+    const pad = 8;
+    spot.style.left   = (r.left - pad) + 'px';
+    spot.style.top    = (r.top - pad) + 'px';
+    spot.style.width  = (r.width + pad * 2) + 'px';
+    spot.style.height = (r.height + pad * 2) + 'px';
+    const cardW = 340, cardH = 180;
+    let cx = r.left + r.width / 2 - cardW / 2;
+    let cy = r.bottom + 16;
+    if (cy + cardH > window.innerHeight - 16) cy = r.top - cardH - 16;
+    if (cx < 16) cx = 16;
+    if (cx + cardW > window.innerWidth - 16) cx = window.innerWidth - cardW - 16;
+    card.style.left = cx + 'px';
+    card.style.top  = cy + 'px';
+    card.style.transform = 'none';
+  }, step.go ? 220 : 30);
+}
+
+window.endTour = endTour;
+
+// ============================================================
 // INIT
 // ============================================================
 function toggleConnectivity() {
@@ -817,6 +1130,25 @@ function toggleConnectivity() {
 
 window.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
+
+  // Role switcher
+  document.getElementById('role-switcher').addEventListener('click', toggleRole);
+  applyRole();
+
+  // Tour button
+  document.getElementById('tour-btn').addEventListener('click', startTour);
+  document.getElementById('tour-next').addEventListener('click', () => {
+    if (tourIdx === TOUR_STEPS.length - 1) endTour(); else { tourIdx++; showTourStep(); }
+  });
+  document.getElementById('tour-prev').addEventListener('click', () => { if (tourIdx > 0) { tourIdx--; showTourStep(); } });
+
+  // Audit filter
+  document.addEventListener('input', e => {
+    if (e.target.id === 'audit-search') { state.auditFilter.q = e.target.value; renderAudit(); }
+  });
+  document.addEventListener('change', e => {
+    if (e.target.id === 'audit-action-filter') { state.auditFilter.action = e.target.value; renderAudit(); }
+  });
 
   // Connectivity toggle
   document.getElementById('connectivity-toggle').addEventListener('click', toggleConnectivity);
@@ -872,4 +1204,9 @@ window.addEventListener('DOMContentLoaded', () => {
   refreshConnectivityUI();
   route();
   attachDropZones();
+
+  // Auto-trigger tour on first visit (only on dashboard)
+  if (!state.tourSeen && (location.hash === '' || location.hash === '#/')) {
+    setTimeout(startTour, 600);
+  }
 });
