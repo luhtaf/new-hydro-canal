@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0284c7" />
+<title>HydroCanal QC — Operations</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230284c7' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@2.3.1/dist/chartjs-plugin-dragdata.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'], mono: ['JetBrains Mono','ui-monospace'] },
+        colors: { brand: { 50:'#f0f9ff',100:'#e0f2fe',200:'#bae6fd',300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#0369a1',800:'#075985',900:'#0c4a6e',950:'#082f49' } },
+        boxShadow: {
+          'soft':   '0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06)',
+          'card':   '0 1px 2px rgba(15,23,42,.04), 0 8px 24px -8px rgba(15,23,42,.10)',
+          'pop':    '0 2px 6px rgba(15,23,42,.06), 0 20px 40px -12px rgba(15,23,42,.18)',
+        },
+      },
+    },
+  };
+</script>
+</head>
+<body class="font-sans antialiased">
+
+<!-- Offline banner -->
+<div id="offline-banner" class="hidden fixed top-0 inset-x-0 z-50 bg-amber-50 border-b border-amber-300 text-amber-900 text-sm animate-slide-down">
+  <div class="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
+    <i data-lucide="cloud-off" class="w-4 h-4"></i>
+    <span class="font-medium">Mode offline aktif.</span>
+    <span class="text-amber-700">Perubahan disimpan lokal &amp; akan disinkronkan saat online kembali.</span>
+    <span class="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold bg-amber-200/70 px-2 py-1 rounded-full">
+      <span class="badge-dot bg-amber-500 animate-pulse-dot"></span>
+      <span id="queue-count">0</span> tertunda
+    </span>
+  </div>
+</div>
+
+<!-- Top nav -->
+<nav id="topnav" class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
+    <button id="sidebar-toggle" class="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-slate-100"><i data-lucide="menu" class="w-5 h-5 text-slate-600"></i></button>
+    <a href="#/" class="flex items-center gap-2.5 font-bold text-slate-900">
+      <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 grid place-items-center shadow-soft"><i data-lucide="droplets" class="w-4 h-4 text-white"></i></span>
+      <span class="hidden sm:inline">HydroCanal QC</span>
+    </a>
+    <span class="hidden md:inline-flex badge bg-slate-100 text-slate-600 ml-2">v2.0 · ops</span>
+
+    <div class="ml-auto flex items-center gap-2">
+      <button id="cmdk-btn" class="btn btn-ghost text-xs hidden sm:inline-flex" title="Cari (⌘K)">
+        <i data-lucide="search" class="w-3.5 h-3.5"></i>
+        <span>Cari</span>
+        <span class="cmdk-kbd ml-1">⌘K</span>
+      </button>
+      <button id="connectivity-toggle" class="btn btn-ghost text-xs" title="Toggle koneksi (demo)">
+        <i data-lucide="wifi" class="w-3.5 h-3.5" id="conn-icon"></i>
+        <span id="conn-label">Online</span>
+      </button>
+      <button id="theme-toggle" class="btn btn-ghost text-xs" title="Toggle tema">
+        <i data-lucide="moon" class="w-3.5 h-3.5"></i>
+      </button>
+      <button id="sync-drawer-btn" class="relative btn btn-ghost text-xs">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Sinkron</span>
+        <span id="queue-badge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center">0</span>
+      </button>
+      <div class="hidden md:flex items-center gap-2 ml-1 pl-3 border-l border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-xs font-bold">FA</div>
+        <div class="text-xs leading-tight">
+          <div class="font-semibold text-slate-900">Fathul A.</div>
+          <div class="text-slate-500">QC Operator · KBN01</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Layout -->
+<div class="max-w-7xl mx-auto px-4 py-6 grid md:grid-cols-[220px_1fr] gap-6" id="layout">
+  <aside id="sidebar" class="hidden md:block">
+    <div class="sticky top-20 space-y-1">
+      <div class="px-3 pt-2 pb-1.5 text-[11px] uppercase tracking-wider font-semibold text-slate-400">Workspace</div>
+      <a href="#/" class="nav-link" data-route="/"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+      <a href="#/kalender" class="nav-link" data-route="/kalender"><i data-lucide="calendar-days"></i>Kalender</a>
+      <a href="#/undangan" class="nav-link" data-route="/undangan"><i data-lucide="mail"></i>Undangan QC</a>
+      <a href="#/undangan/baru" class="nav-link pl-7 text-[0.8125rem]" data-route="/undangan/baru"><i data-lucide="plus-circle"></i>Undangan baru</a>
+      <a href="#/penugasan" class="nav-link" data-route="/penugasan"><i data-lucide="clipboard-list"></i>Penugasan Saya</a>
+      <a href="#/notifikasi" class="nav-link" data-route="/notifikasi"><i data-lucide="bell"></i>Notifikasi <span id="notif-nav-badge" class="hidden ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-brand-500 text-white text-[10px] font-bold">0</span></a>
+
+      <div class="px-3 pt-4 pb-1.5 text-[11px] uppercase tracking-wider font-semibold text-slate-400">Lapangan</div>
+      <a href="#/lapangan/parameter" class="nav-link" data-route="/lapangan/parameter"><i data-lucide="form-input"></i>Input Parameter</a>
+      <a href="#/lapangan/kedalaman" class="nav-link" data-route="/lapangan/kedalaman"><i data-lucide="ruler"></i>Input Kedalaman</a>
+      <a href="#/peta" class="nav-link" data-route="/peta"><i data-lucide="map"></i>Peta penugasan</a>
+
+      <div class="px-3 pt-4 pb-1.5 text-[11px] uppercase tracking-wider font-semibold text-slate-400">QC</div>
+      <a href="#/qc" class="nav-link" data-route="/qc"><i data-lucide="line-chart"></i>QC Processing</a>
+      <a href="#/konflik" class="nav-link" data-route="/konflik"><i data-lucide="git-merge"></i>Konflik sync <span class="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold">2</span></a>
+      <a href="#/distrik" class="nav-link" data-route="/distrik"><i data-lucide="map-pinned"></i>Distrik &amp; Region</a>
+      <a href="#/pengaturan" class="nav-link" data-route="/pengaturan"><i data-lucide="settings"></i>Pengaturan</a>
+
+      <div class="mt-6 p-3 rounded-xl bg-gradient-to-br from-brand-50 to-white border border-brand-100">
+        <div class="flex items-center gap-2 text-brand-700 font-semibold text-xs"><i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>Penyimpanan lokal</div>
+        <div class="mt-1.5 text-[11px] text-slate-600 leading-relaxed">PouchDB · <span class="font-mono text-slate-900">14.2 MB</span> / 50 MB</div>
+        <div class="mt-2 h-1.5 bg-brand-100 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-brand-400 to-brand-600 rounded-full" style="width:28%"></div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="view" class="min-w-0 animate-fade"></main>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 grid grid-cols-5 text-[11px] font-medium text-slate-500">
+  <a href="#/" data-route="/" class="flex flex-col items-center justify-center py-2 gap-0.5"><i data-lucide="home" class="w-5 h-5"></i>Home</a>
+  <a href="#/kalender" data-route="/kalender" class="flex flex-col items-center justify-center py-2 gap-0.5"><i data-lucide="calendar" class="w-5 h-5"></i>Kalender</a>
+  <a href="#/penugasan" data-route="/penugasan" class="flex flex-col items-center justify-center py-2 gap-0.5"><i data-lucide="clipboard-list" class="w-5 h-5"></i>Tugas</a>
+  <a href="#/peta" data-route="/peta" class="flex flex-col items-center justify-center py-2 gap-0.5"><i data-lucide="map" class="w-5 h-5"></i>Peta</a>
+  <a href="#/pengaturan" data-route="/pengaturan" class="flex flex-col items-center justify-center py-2 gap-0.5"><i data-lucide="user" class="w-5 h-5"></i>Akun</a>
+</nav>
+
+<!-- Sync drawer -->
+<div id="sync-drawer" class="hidden fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" data-close></div>
+  <div class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-pop animate-slide-up">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div><div class="font-bold text-slate-900">Antrian sinkronisasi</div><div class="text-xs text-slate-500 mt-0.5">Perubahan offline akan dikirim ke server saat online</div></div>
+      <button data-close class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="p-5 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 200px)" id="sync-list"></div>
+    <div class="p-4 border-t border-slate-200 flex items-center gap-2">
+      <button class="btn btn-primary flex-1" onclick="forceSyncAll()"><i data-lucide="cloud-upload" class="w-4 h-4"></i>Sinkron sekarang</button>
+      <button class="btn btn-ghost" data-close>Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Command palette -->
+<div id="cmdk" class="hidden fixed inset-0 z-50 grid place-items-start pt-[15vh] px-4">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+  <div class="relative w-full max-w-lg bg-white rounded-xl shadow-pop border border-slate-200 overflow-hidden animate-scale-in">
+    <div class="p-3 border-b border-slate-100 flex items-center gap-2">
+      <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+      <input id="cmdk-input" class="flex-1 bg-transparent outline-none text-sm placeholder:text-slate-400" placeholder="Ketik perintah atau halaman…" autocomplete="off" />
+      <span class="cmdk-kbd">ESC</span>
+    </div>
+    <div class="p-2 max-h-[50vh] overflow-y-auto" id="cmdk-list"></div>
+    <div class="p-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+      <div class="flex gap-2"><span><span class="cmdk-kbd">↑</span><span class="cmdk-kbd">↓</span> navigasi</span><span><span class="cmdk-kbd">↵</span> pilih</span></div>
+      <div>HydroCanal QC</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-stack" class="fixed bottom-4 right-4 z-[60] space-y-2 max-w-sm"></div>
+
+<!-- ============================================================
+     VIEW TEMPLATES
+     ============================================================ -->
+
+<template id="view-login">
+  <div class="min-h-[80vh] grid place-items-center -mx-4 -my-6 px-4">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-6">
+        <div class="inline-grid place-items-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 shadow-pop mb-3"><i data-lucide="droplets" class="w-7 h-7 text-white"></i></div>
+        <div class="text-2xl font-bold tracking-tight">HydroCanal QC</div>
+        <div class="text-sm text-slate-500 mt-1">Operations &amp; QC processing</div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-card border border-slate-200 p-6 space-y-4">
+        <div><label class="text-xs font-semibold text-slate-700">USV Code</label><input class="input mt-1.5" value="KBN01" /></div>
+        <div><label class="text-xs font-semibold text-slate-700">Operator</label><input class="input mt-1.5" value="Fathul Akmal" /></div>
+        <div><label class="text-xs font-semibold text-slate-700">PIN</label><input class="input mt-1.5" type="password" placeholder="••••" /></div>
+        <button class="btn btn-primary w-full justify-center" onclick="location.hash='#/'">Masuk <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+        <div class="text-[11px] text-slate-500 text-center pt-2 border-t border-slate-100">Akun lokal · PIN tersimpan di perangkat</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-dashboard">
+  <div class="space-y-6">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div>
+        <div class="text-[13px] text-slate-500">Senin, 11 Mei 2026</div>
+        <h1 class="text-2xl font-bold tracking-tight mt-1">Selamat pagi, Fathul.</h1>
+        <p class="text-sm text-slate-600 mt-1">3 penugasan aktif minggu ini · 2 menunggu sinkron.</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost"><i data-lucide="download" class="w-4 h-4"></i>Export</button>
+        <a href="#/undangan/baru" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Undangan baru</a>
+      </div>
+    </header>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft">
+        <div class="flex items-center justify-between"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Undangan aktif</div><span class="badge bg-brand-50 text-brand-700"><span class="badge-dot bg-brand-500"></span>5</span></div>
+        <div class="mt-2 text-3xl font-bold tracking-tight">12</div>
+        <div class="mt-1 text-xs text-emerald-600 font-medium flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i>+3 vs minggu lalu</div>
+      </div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft">
+        <div class="flex items-center justify-between"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Penugasan saya</div><i data-lucide="clipboard-list" class="w-4 h-4 text-slate-400"></i></div>
+        <div class="mt-2 text-3xl font-bold tracking-tight">3</div>
+        <div class="mt-1 text-xs text-slate-500">2 belum dimulai · 1 jalan</div>
+      </div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft">
+        <div class="flex items-center justify-between"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">QC pass rate</div><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i></div>
+        <div class="mt-2 text-3xl font-bold tracking-tight">87<span class="text-base font-medium text-slate-400">%</span></div>
+        <div class="mt-1 text-xs text-slate-500">142 dari 163 kanal</div>
+      </div>
+      <div class="stat-card rounded-xl border border-slate-200 p-4 shadow-soft">
+        <div class="flex items-center justify-between"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Antrian sync</div><span class="badge bg-amber-50 text-amber-700"><span class="badge-dot bg-amber-500 animate-pulse-dot"></span>tertunda</span></div>
+        <div class="mt-2 text-3xl font-bold tracking-tight">2</div>
+        <div class="mt-1 text-xs text-slate-500">Kembali online untuk kirim</div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="sec-title">Penugasan minggu ini</div>
+          <a href="#/penugasan" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Lihat semua →</a>
+        </div>
+        <div class="divide-y divide-slate-100" id="dashboard-tasks"></div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between"><div class="sec-title">Status QC terbaru</div></div>
+        <div class="p-4 space-y-3">
+          <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-emerald-50 grid place-items-center text-emerald-600"><i data-lucide="check" class="w-5 h-5"></i></div><div class="flex-1 min-w-0"><div class="text-sm font-semibold truncate">3C01-251114-KBN01</div><div class="text-xs text-slate-500">Pass · 24 kanal</div></div><span class="badge bg-emerald-50 text-emerald-700">98%</span></div>
+          <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-amber-50 grid place-items-center text-amber-600"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div><div class="flex-1 min-w-0"><div class="text-sm font-semibold truncate">3C05-251112-KBN02</div><div class="text-xs text-slate-500">Tolerance · perlu review</div></div><span class="badge bg-amber-50 text-amber-700">72%</span></div>
+          <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-rose-50 grid place-items-center text-rose-600"><i data-lucide="x" class="w-5 h-5"></i></div><div class="flex-1 min-w-0"><div class="text-sm font-semibold truncate">3C02-251110-KBN01</div><div class="text-xs text-slate-500">Not pass · re-QC</div></div><span class="badge bg-rose-50 text-rose-700">45%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-kalender">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Kalender</h1><p class="text-sm text-slate-600 mt-1">Jadwal undangan, penugasan, dan deadline QC.</p></div>
+      <div class="flex gap-2">
+        <div class="inline-flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-soft"><button class="px-3 py-1.5 rounded-md text-xs font-semibold bg-brand-50 text-brand-700">Bulan</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">Minggu</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">Hari</button></div>
+        <a href="#/undangan/baru" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Tambah</a>
+      </div>
+    </header>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2"><button class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="chevron-left" class="w-4 h-4"></i></button><div class="font-bold text-lg">Mei 2026</div><button class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="chevron-right" class="w-4 h-4"></i></button></div>
+          <div class="flex items-center gap-3 text-xs text-slate-600"><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-500"></span>Undangan</span><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Penugasan</span><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Deadline</span></div>
+        </div>
+        <div class="p-3">
+          <div class="grid-cal mb-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <div class="text-center p-1">Sen</div><div class="text-center p-1">Sel</div><div class="text-center p-1">Rab</div><div class="text-center p-1">Kam</div><div class="text-center p-1">Jum</div><div class="text-center p-1">Sab</div><div class="text-center p-1">Min</div>
+          </div>
+          <div class="grid-cal" id="cal-grid"></div>
+        </div>
+      </div>
+      <aside class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+        <div class="sec-title mb-3">Detail hari</div>
+        <div id="day-detail"></div>
+      </aside>
+    </div>
+  </div>
+</template>
+
+<template id="view-undangan">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Undangan QC Kanal</h1><p class="text-sm text-slate-600 mt-1">Daftar work order dari klien dan kontraktor.</p></div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost"><i data-lucide="filter" class="w-4 h-4"></i>Filter</button>
+        <button class="btn btn-ghost"><i data-lucide="download" class="w-4 h-4"></i>Export</button>
+        <a href="#/undangan/baru" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Undangan baru</a>
+      </div>
+    </header>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden">
+      <div class="p-3 border-b border-slate-100 flex flex-wrap gap-2 items-center">
+        <div class="flex-1 min-w-[200px] relative">
+          <i data-lucide="search" class="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400"></i>
+          <input id="undangan-search" class="input pl-9 input-sm" placeholder="Cari order no, kontraktor, region…" />
+        </div>
+        <div class="inline-flex bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+          <button class="px-3 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-soft" data-undangan-status="semua">Semua</button>
+          <button class="px-3 py-1 rounded-md text-xs font-semibold text-slate-600" data-undangan-status="aktif">Aktif</button>
+          <button class="px-3 py-1 rounded-md text-xs font-semibold text-slate-600" data-undangan-status="menunggu">Menunggu</button>
+          <button class="px-3 py-1 rounded-md text-xs font-semibold text-slate-600" data-undangan-status="selesai">Selesai</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+            <tr>
+              <th class="text-left px-4 py-2.5 w-8"><input type="checkbox" class="rounded" /></th>
+              <th class="text-left px-4 py-2.5">Order</th>
+              <th class="text-left px-4 py-2.5">Kontraktor</th>
+              <th class="text-left px-4 py-2.5">Distrik / Region</th>
+              <th class="text-left px-4 py-2.5">Jadwal</th>
+              <th class="text-left px-4 py-2.5">Kanal</th>
+              <th class="text-left px-4 py-2.5">Status</th>
+              <th class="text-left px-4 py-2.5 w-12"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100" id="undangan-rows"></tbody>
+        </table>
+      </div>
+      <div class="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div>Menampilkan <span id="undangan-total">— dari —</span></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-undangan-baru">
+  <div class="space-y-5">
+    <nav class="flex items-center gap-1.5 text-xs text-slate-500">
+      <a href="#/undangan" class="hover:text-slate-900">Undangan</a><i data-lucide="chevron-right" class="w-3 h-3"></i><span class="text-slate-900 font-medium">Undangan baru</span>
+    </nav>
+    <header class="flex flex-wrap items-end justify-between gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Buat undangan QC</h1><p class="text-sm text-slate-600 mt-1">Lengkapi info klien, daftar kanal, dan jadwal pengukuran.</p></div>
+      <div class="flex gap-2">
+        <a href="#/undangan" class="btn btn-ghost"><i data-lucide="x" class="w-4 h-4"></i>Batal</a>
+        <button class="btn btn-ghost" onclick="saveOffline('Draft undangan PAT-2026-0043')"><i data-lucide="save" class="w-4 h-4"></i>Simpan draft</button>
+        <button class="btn btn-primary" onclick="submitUndangan()"><i data-lucide="check" class="w-4 h-4"></i>Buat &amp; assign</button>
+      </div>
+    </header>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-1">
+      <div class="grid grid-cols-4 text-xs">
+        <div class="relative p-3 flex items-center gap-2.5"><div class="w-7 h-7 rounded-full bg-brand-500 text-white grid place-items-center font-bold shadow-soft">1</div><div><div class="font-semibold text-slate-900">Klien</div><div class="text-slate-500">Kontraktor &amp; region</div></div><div class="hidden sm:block absolute right-0 top-1/2 w-px h-6 bg-slate-200"></div></div>
+        <div class="relative p-3 flex items-center gap-2.5"><div class="w-7 h-7 rounded-full bg-brand-500 text-white grid place-items-center font-bold shadow-soft">2</div><div><div class="font-semibold text-slate-900">Kanal</div><div class="text-slate-500">Daftar &amp; parameter awal</div></div><div class="hidden sm:block absolute right-0 top-1/2 w-px h-6 bg-slate-200"></div></div>
+        <div class="relative p-3 flex items-center gap-2.5"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 grid place-items-center font-bold">3</div><div><div class="font-semibold text-slate-500">Jadwal</div><div class="text-slate-400">Tanggal &amp; petugas</div></div><div class="hidden sm:block absolute right-0 top-1/2 w-px h-6 bg-slate-200"></div></div>
+        <div class="relative p-3 flex items-center gap-2.5"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 grid place-items-center font-bold">4</div><div><div class="font-semibold text-slate-500">Review</div><div class="text-slate-400">Konfirmasi &amp; kirim</div></div></div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 space-y-4">
+        <section class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between"><div class="sec-title">1. Klien &amp; region</div><span class="badge bg-emerald-50 text-emerald-700"><i data-lucide="check" class="w-3 h-3"></i>aktif</span></div>
+          <div class="p-4 grid sm:grid-cols-2 gap-4 text-sm">
+            <div class="sm:col-span-2">
+              <label class="text-xs font-semibold text-slate-700">Kontraktor</label>
+              <div class="relative mt-1.5"><i data-lucide="building-2" class="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400"></i><input class="input pl-9" value="PT. Musi Nauli Lestari" /><span class="absolute right-2.5 top-2 inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">singkatan: PT. MNL</span></div>
+              <div class="text-[11px] text-slate-500 mt-1">Singkatan akan tampil di chart export. <a href="#" class="text-brand-600 font-semibold">Ubah</a></div>
+            </div>
+            <div><label class="text-xs font-semibold text-slate-700">Region</label><select class="input mt-1.5"><option>PT. Ciptamas Bumi Subur</option><option selected>PT. Musi Nauli Lestari</option><option>PT. Sumber Hijau Permai</option></select></div>
+            <div><label class="text-xs font-semibold text-slate-700">Distrik</label><select class="input mt-1.5"><option>3M01 — Musi Rawas</option><option selected>3C01 — Banyuasin</option><option>3M02 — PALI</option></select><div class="text-[11px] text-amber-600 mt-1 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i>Kode 3C01 juga ada di region PT. CBS — pastikan benar</div></div>
+            <div><label class="text-xs font-semibold text-slate-700">Order No</label><input class="input mt-1.5 font-mono" value="PAT-2026-0043" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Operation No</label><div class="relative mt-1.5"><input class="input" value="0010" /><span class="absolute right-2 top-2.5 inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold"><i data-lucide="check" class="w-3.5 h-3.5"></i>default</span></div></div>
+            <div><label class="text-xs font-semibold text-slate-700">QC Type</label><div class="inline-flex bg-slate-100 rounded-lg p-0.5 mt-1.5 w-full"><button class="flex-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-soft">QC (Q1)</button><button class="flex-1 px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">RE-QC (Q2)</button></div></div>
+            <div><label class="text-xs font-semibold text-slate-700">USV / Boat</label><select class="input mt-1.5 font-mono"><option>KBN01</option><option>KBN02</option><option>KBN03</option></select></div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div><div class="sec-title">2. Daftar kanal</div><div class="text-xs text-slate-500 mt-0.5">Kanal &gt;999m akan otomatis dibagi 2 segment.</div></div>
+            <div class="flex gap-2"><button class="btn btn-ghost text-xs"><i data-lucide="upload" class="w-3.5 h-3.5"></i>Import Excel</button><button class="btn btn-ghost text-xs"><i data-lucide="plus" class="w-3.5 h-3.5"></i>Tambah baris</button></div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-semibold"><tr><th class="text-left px-3 py-2">ID Kanal</th><th class="text-left px-3 py-2">Panjang</th><th class="text-left px-3 py-2">Dimensi (p×l×t)</th><th class="text-left px-3 py-2">Start STA</th><th class="text-left px-3 py-2">End STA</th><th class="text-left px-3 py-2">Auto-split</th><th class="text-left px-3 py-2 w-10"></th></tr></thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr><td class="px-3 py-1.5"><input class="input input-sm font-mono" value="KBN01-K01"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="500"/></td><td class="px-3 py-1.5"><input class="input input-sm" value="500 × 8 × 3"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="0"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="500"/></td><td class="px-3 py-1.5 text-slate-400 text-xs">—</td><td class="px-3 py-1.5"><button class="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td></tr>
+                <tr class="bg-amber-50/40"><td class="px-3 py-1.5"><input class="input input-sm font-mono" value="KBN01-K02"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="1200"/></td><td class="px-3 py-1.5"><input class="input input-sm" value="1200 × 8 × 3"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="0"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="1200"/></td><td class="px-3 py-1.5"><span class="badge bg-amber-100 text-amber-800"><i data-lucide="split" class="w-3 h-3"></i>2 segmen</span></td><td class="px-3 py-1.5"><button class="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td></tr>
+                <tr><td class="px-3 py-1.5"><input class="input input-sm font-mono" value="KBN01-K03"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="420"/></td><td class="px-3 py-1.5"><input class="input input-sm" value="420 × 6 × 3"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="0"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="420"/></td><td class="px-3 py-1.5 text-slate-400 text-xs">—</td><td class="px-3 py-1.5"><button class="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td></tr>
+                <tr><td class="px-3 py-1.5"><input class="input input-sm font-mono" value="KBN01-K04"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="380"/></td><td class="px-3 py-1.5"><input class="input input-sm" value="380 × 6 × 3"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="0"/></td><td class="px-3 py-1.5"><input class="input input-sm w-20" value="380"/></td><td class="px-3 py-1.5 text-slate-400 text-xs">—</td><td class="px-3 py-1.5"><button class="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <div class="text-slate-500">4 kanal · total <b class="text-slate-900">2.500 m</b> · 1 akan di-split jadi 2 segmen (KBN01-K02)</div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 sec-title">3. Jadwal &amp; petugas</div>
+          <div class="p-4 grid sm:grid-cols-2 gap-4 text-sm">
+            <div><label class="text-xs font-semibold text-slate-700">QC Date target</label><input type="date" class="input mt-1.5" value="2026-05-15"/></div>
+            <div><label class="text-xs font-semibold text-slate-700">Estimasi durasi</label><input class="input mt-1.5" value="2 hari"/></div>
+            <div class="sm:col-span-2">
+              <label class="text-xs font-semibold text-slate-700">Operator</label>
+              <div class="mt-1.5 grid sm:grid-cols-3 gap-2">
+                <label class="flex items-center gap-2 p-2.5 rounded-lg border-2 border-brand-500 bg-brand-50/40 cursor-pointer"><input type="radio" name="op" checked class="text-brand-500"/><div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-xs font-bold">FA</div><div class="text-xs"><div class="font-semibold">Fathul A.</div><div class="text-slate-500">KBN01 · tersedia</div></div></label>
+                <label class="flex items-center gap-2 p-2.5 rounded-lg border-2 border-slate-200 hover:border-brand-300 cursor-pointer"><input type="radio" name="op" class="text-brand-500"/><div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 grid place-items-center text-white text-xs font-bold">AS</div><div class="text-xs"><div class="font-semibold">Andi S.</div><div class="text-slate-500">KBN02 · tersedia</div></div></label>
+                <label class="flex items-center gap-2 p-2.5 rounded-lg border-2 border-slate-200 opacity-60 cursor-not-allowed"><input type="radio" name="op" disabled/><div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 grid place-items-center text-white text-xs font-bold">RH</div><div class="text-xs"><div class="font-semibold">Rendi H.</div><div class="text-rose-600">cuti 12-16 Mei</div></div></label>
+              </div>
+            </div>
+            <div class="sm:col-span-2"><label class="text-xs font-semibold text-slate-700">Catatan tambahan</label><textarea class="input mt-1.5" rows="2" placeholder="Misal: akses jalan rusak setelah hujan, perlu mobil 4×4"></textarea></div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 sec-title">4. Review</div>
+          <div class="p-4 grid sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">Kontraktor</span><span class="font-semibold">PT. MNL</span></div>
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">Distrik</span><span class="font-semibold">3C01 Banyuasin</span></div>
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">Order</span><span class="font-semibold font-mono">PAT-2026-0043</span></div>
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">QC Type</span><span class="font-semibold">QC (Q1)</span></div>
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">Kanal</span><span class="font-semibold">4 kanal · 5 segmen</span></div>
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">QC Date</span><span class="font-semibold">15 Mei 2026</span></div>
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">Operator</span><span class="font-semibold">Fathul A. (KBN01)</span></div>
+            <div class="flex justify-between border-b border-slate-100 py-1.5"><span class="text-slate-500">Preview file</span><span class="font-mono text-xs">3C01-20260515-KBN01-1R0Q1</span></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4 sticky top-20">
+          <div class="sec-title mb-3">Ringkasan</div>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-slate-400"></i><span class="text-slate-600">PT. MNL · 3C01 Banyuasin</span></div>
+            <div class="flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4 text-slate-400"></i><span class="text-slate-600">4 kanal (1 auto-split)</span></div>
+            <div class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i><span class="text-slate-600">15 Mei 2026</span></div>
+            <div class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4 text-slate-400"></i><span class="text-slate-600">Fathul A.</span></div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-slate-100"><div class="text-xs text-slate-500 mb-2">Validasi</div>
+            <ul class="space-y-1.5 text-xs">
+              <li class="flex items-center gap-2 text-emerald-700"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>Order No unik</li>
+              <li class="flex items-center gap-2 text-emerald-700"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>Operation No = 0010</li>
+              <li class="flex items-center gap-2 text-emerald-700"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>Petugas tersedia</li>
+              <li class="flex items-center gap-2 text-amber-700"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>1 kanal auto-split (KBN01-K02)</li>
+            </ul>
+          </div>
+          <button class="btn btn-primary w-full justify-center mt-4" onclick="submitUndangan()"><i data-lucide="send" class="w-4 h-4"></i>Buat &amp; assign</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</template>
+
+<template id="view-undangan-detail">
+  <div class="space-y-5">
+    <nav class="flex items-center gap-1.5 text-xs text-slate-500"><a href="#/undangan" class="hover:text-slate-900">Undangan</a><i data-lucide="chevron-right" class="w-3 h-3"></i><span class="text-slate-900 font-medium">PAT-2026-0042</span></nav>
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div><div class="flex items-center gap-3"><h1 class="text-2xl font-bold tracking-tight">PAT-2026-0042</h1><span class="badge bg-amber-50 text-amber-700"><span class="badge-dot bg-amber-500"></span>Menunggu assign</span></div><p class="text-sm text-slate-600 mt-1">PT. Musi Nauli Lestari · 6 kanal · Jadwal 15 Mei 2026</p></div>
+      <div class="flex gap-2 no-print">
+        <button class="btn btn-ghost" onclick="window.print()"><i data-lucide="printer" class="w-4 h-4"></i>Cetak</button>
+        <button class="btn btn-ghost"><i data-lucide="copy" class="w-4 h-4"></i>Duplikat</button>
+        <button class="btn btn-primary"><i data-lucide="user-plus" class="w-4 h-4"></i>Assign petugas</button>
+      </div>
+    </header>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 sec-title">Detail undangan</div>
+          <div class="p-4 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            <div><div class="text-xs text-slate-500">Order No</div><div class="font-mono font-semibold mt-0.5">PAT-2026-0042</div></div>
+            <div><div class="text-xs text-slate-500">Operation No</div><div class="font-mono font-semibold mt-0.5">0010</div></div>
+            <div><div class="text-xs text-slate-500">Kontraktor</div><div class="font-semibold mt-0.5">PT. Musi Nauli Lestari <span class="text-slate-400 font-normal">· PT. MNL</span></div></div>
+            <div><div class="text-xs text-slate-500">Region</div><div class="font-semibold mt-0.5">PT. Ciptamas Bumi Subur</div></div>
+            <div><div class="text-xs text-slate-500">Distrik</div><div class="font-semibold mt-0.5">3C01 — Banyuasin</div></div>
+            <div><div class="text-xs text-slate-500">USV / Operator</div><div class="font-semibold mt-0.5">KBN01 / Belum di-assign</div></div>
+            <div><div class="text-xs text-slate-500">QC Type</div><div class="font-semibold mt-0.5">QC (Revisi 0)</div></div>
+            <div><div class="text-xs text-slate-500">QC Date target</div><div class="font-semibold mt-0.5">15 Mei 2026</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="sec-title mb-3">Timeline</div>
+          <div class="relative pl-5 space-y-3">
+            <div class="absolute left-1.5 top-2 bottom-2 w-px bg-slate-200"></div>
+            <div class="relative"><span class="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span><div class="text-sm font-semibold">Undangan dibuat</div><div class="text-xs text-slate-500">10 Mei 2026, 14:22 · Admin</div></div>
+            <div class="relative"><span class="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-brand-100"></span><div class="text-sm font-semibold">Parameter di-import</div><div class="text-xs text-slate-500">10 Mei 2026, 14:48</div></div>
+            <div class="relative"><span class="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full bg-slate-300 ring-4 ring-slate-100"></span><div class="text-sm font-semibold text-slate-500">Menunggu assign petugas</div><div class="text-xs text-slate-400">—</div></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="sec-title mb-3">Lampiran</div>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50"><i data-lucide="file-text" class="w-4 h-4 text-brand-600"></i>Undangan-PAT-0042.pdf <span class="ml-auto text-xs text-slate-400">128 KB</span></div>
+            <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>Parameter-KBN01.xlsx <span class="ml-auto text-xs text-slate-400">42 KB</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-penugasan">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Penugasan saya</h1><p class="text-sm text-slate-600 mt-1">QC yang ditugaskan ke kamu sebagai operator KBN01.</p></div>
+      <div class="inline-flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-soft"><button class="px-3 py-1.5 rounded-md text-xs font-semibold bg-brand-50 text-brand-700">Aktif</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">Selesai</button></div>
+    </header>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3" id="penugasan-cards"></div>
+  </div>
+</template>
+
+<template id="view-penugasan-detail">
+  <div class="space-y-5" id="penugasan-detail-content"></div>
+</template>
+
+<template id="view-lapangan-parameter">
+  <div class="space-y-5">
+    <nav class="flex items-center gap-1.5 text-xs text-slate-500"><a href="#/penugasan" class="hover:text-slate-900">Penugasan</a><i data-lucide="chevron-right" class="w-3 h-3"></i><a href="#/penugasan/detail" class="hover:text-slate-900">KBN01-K02</a><i data-lucide="chevron-right" class="w-3 h-3"></i><span class="text-slate-900 font-medium">Input Parameter</span></nav>
+    <header class="flex flex-wrap items-end justify-between gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Parameter QC — KBN01-K02</h1><p class="text-sm text-slate-600 mt-1">Isi parameter sebelum input data kedalaman. <span class="text-amber-700">Disimpan otomatis ke perangkat.</span></p></div>
+      <div class="flex gap-2"><button class="btn btn-ghost"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>Reset</button><button class="btn btn-primary" onclick="saveOffline('Parameter KBN01-K02')"><i data-lucide="save" class="w-4 h-4"></i>Simpan</button></div>
+    </header>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between"><div class="sec-title">Informasi kanal</div><span class="text-xs text-emerald-600 font-semibold inline-flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>Tervalidasi</span></div>
+          <div class="p-4 grid sm:grid-cols-2 gap-4 text-sm">
+            <div><label class="text-xs font-semibold text-slate-700">ID Kanal</label><input class="input mt-1.5 font-mono" value="KBN01-K02" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Operation No</label><div class="relative mt-1.5"><input class="input pr-9" value="0010" /><span class="absolute right-2 top-2.5 inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold"><i data-lucide="check" class="w-3.5 h-3.5"></i></span></div></div>
+            <div><label class="text-xs font-semibold text-slate-700">Order No</label><input class="input mt-1.5 font-mono" value="PAT-2026-0042" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Measure Point</label><div class="relative mt-1.5"><input class="input pr-9" value="MP-12A" /><span class="absolute right-2 top-2.5 inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold"><i data-lucide="check" class="w-3.5 h-3.5"></i>tanpa spasi</span></div></div>
+            <div><label class="text-xs font-semibold text-slate-700">Start STA</label><input class="input mt-1.5" value="500" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">End STA</label><input class="input mt-1.5" value="1200" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Panjang kanal (m)</label><div class="relative mt-1.5"><input class="input pr-20" value="700" /><span class="absolute right-2 top-2 inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">match page 3</span></div></div>
+            <div><label class="text-xs font-semibold text-slate-700">Lane</label><input class="input mt-1.5" value="2" /></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 sec-title">Parameter pengukuran</div>
+          <div class="p-4 grid sm:grid-cols-3 gap-4 text-sm">
+            <div><label class="text-xs font-semibold text-slate-700">Water level (m)</label><input class="input mt-1.5" value="2.150" /><div class="text-[10px] text-slate-500 mt-1">max 3 angka belakang titik</div></div>
+            <div><label class="text-xs font-semibold text-slate-700">Tranducer</label><input class="input mt-1.5" value="0.450" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Bed float</label><input class="input mt-1.5" value="0.080" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Depth correction</label><input class="input mt-1.5" value="0.020" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">QC Type</label><select class="input mt-1.5"><option>QC (Q1)</option><option>RE-QC (Q2)</option></select></div>
+            <div><label class="text-xs font-semibold text-slate-700">Revision</label><input class="input mt-1.5" value="000" /></div>
+          </div>
+          <div class="px-4 pb-4"><div class="p-3 rounded-lg bg-brand-50 border border-brand-100 flex gap-3 items-start text-xs"><i data-lucide="info" class="w-4 h-4 text-brand-600 shrink-0 mt-0.5"></i><div class="text-brand-900"><b>Final depth</b> akan dihitung otomatis: <code class="font-mono">depth + WL + tranducer + bed_float − correction</code>, lalu di-flip untuk grafik (bar ke bawah).</div></div></div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="sec-title mb-3">Validasi</div>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>Panjang kanal = Σ STA <b class="text-emerald-700">match</b></li>
+            <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>ID Kanal sesuai page 3</li>
+            <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>Measure Point tanpa spasi</li>
+            <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>Operation No = 0010</li>
+            <li class="flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>Belum di-cross-check dengan TXT</li>
+          </ul>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="sec-title mb-3">Preview nama file</div>
+          <div class="p-3 rounded-lg bg-slate-900 text-slate-100 font-mono text-xs">3C01-20260515-KBN01-1R0Q1.txt</div>
+          <div class="text-[11px] text-slate-500 mt-2 leading-relaxed">Format: <code class="font-mono">[district]-[qc_date]-[usv]-[urut][rev][qctype]</code>.</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="text-xs font-semibold text-slate-700 mb-2">Selanjutnya</div>
+          <a href="#/lapangan/kedalaman" class="btn btn-primary w-full justify-center">Input kedalaman <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-lapangan-kedalaman">
+  <div class="space-y-5">
+    <nav class="flex items-center gap-1.5 text-xs text-slate-500"><a href="#/penugasan" class="hover:text-slate-900">Penugasan</a><i data-lucide="chevron-right" class="w-3 h-3"></i><a href="#/penugasan/detail" class="hover:text-slate-900">KBN01-K02</a><i data-lucide="chevron-right" class="w-3 h-3"></i><span class="text-slate-900 font-medium">Input Kedalaman</span></nav>
+    <header class="flex flex-wrap items-end justify-between gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Data kedalaman — KBN01-K02</h1><p class="text-sm text-slate-600 mt-1">STA tiap 20m · 35 titik · GPS tercatat per titik.</p></div>
+      <div class="flex gap-2">
+        <button id="csv-import-btn" class="btn btn-ghost"><i data-lucide="upload" class="w-4 h-4"></i>Import CSV</button>
+        <input type="file" id="csv-import-input" accept=".csv,.txt" class="hidden"/>
+        <button id="gps-capture-btn" class="btn btn-ghost"><i data-lucide="map-pin" class="w-4 h-4"></i>Capture GPS</button>
+        <button class="btn btn-primary" onclick="saveOffline('Kedalaman KBN01-K02')"><i data-lucide="save" class="w-4 h-4"></i>Simpan</button>
+      </div>
+    </header>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="sec-title">Tabel STA</div>
+          <div class="flex items-center gap-2 text-xs text-slate-600"><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Pass</span><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Tolerance</span><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Not pass</span></div>
+        </div>
+        <div class="overflow-x-auto max-h-[520px]">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-semibold sticky top-0">
+              <tr><th class="text-left px-4 py-2 w-12">#</th><th class="text-left px-4 py-2">STA</th><th class="text-left px-4 py-2">Latitude</th><th class="text-left px-4 py-2">Longitude</th><th class="text-left px-4 py-2">Depth</th><th class="text-left px-4 py-2">Date</th><th class="text-left px-4 py-2">Status</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="depth-rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="flex items-center justify-between mb-2"><div class="sec-title">Preview grafik</div><span class="badge bg-brand-50 text-brand-700"><i data-lucide="move-vertical" class="w-3 h-3"></i>Drag bar</span></div>
+          <div class="text-xs text-slate-500 mb-3">Seret bar ke atas/bawah untuk koreksi kedalaman. Threshold di-render sebagai garis.</div>
+          <div class="relative" style="height: 260px"><canvas id="depth-chart-real"></canvas></div>
+          <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500"><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Pass</span><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Tol</span><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Fail</span></div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="sec-title mb-2">Drop file</div>
+          <div class="drop-zone text-xs text-slate-500">
+            <i data-lucide="cloud-upload" class="w-7 h-7 mx-auto mb-1 text-slate-400"></i>
+            <div>Drag-drop CSV/TXT di sini</div>
+            <div class="text-[10px] mt-1">Format: STA, Latitude, Longitude, Depth, Date</div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="text-xs font-semibold text-slate-700 mb-2">Selanjutnya</div>
+          <a href="#/qc" class="btn btn-primary w-full justify-center">Kirim ke QC processing <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+          <div class="mt-2 text-[11px] text-slate-500 text-center">Akan masuk antrian sync jika offline.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-qc">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">QC Processing</h1><p class="text-sm text-slate-600 mt-1">Proses chart, drag-edit kedalaman, dan export TXT/Excel/PNG.</p></div>
+      <div class="flex gap-2"><button class="btn btn-ghost"><i data-lucide="archive" class="w-4 h-4"></i>Arsip</button><button class="btn btn-primary"><i data-lucide="external-link" class="w-4 h-4"></i>Buka QC App</button></div>
+    </header>
+    <div class="bg-gradient-to-br from-brand-50 to-white rounded-xl border border-brand-100 shadow-soft p-5 flex flex-wrap items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-white shadow-soft grid place-items-center border border-brand-100"><i data-lucide="line-chart" class="w-6 h-6 text-brand-600"></i></div>
+      <div class="flex-1 min-w-0"><div class="font-bold text-slate-900">QC Processing Engine</div><div class="text-sm text-slate-600">Module existing — bar chart drag, threshold pass/tolerance/not pass, export PNG via server canvas.</div></div>
+      <div class="text-xs text-slate-500">v1.0.0 · 18 Des 2025</div>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+        <div class="flex items-center justify-between mb-3"><div class="font-mono font-bold text-sm">3C01-251114-KBN01</div><span class="badge bg-emerald-50 text-emerald-700">selesai</span></div>
+        <div class="depth-track h-32" data-mini-chart="3"></div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div><div class="font-bold text-emerald-600">24</div><div class="text-slate-500">pass</div></div><div><div class="font-bold text-amber-600">3</div><div class="text-slate-500">tol</div></div><div><div class="font-bold text-rose-600">1</div><div class="text-slate-500">fail</div></div></div>
+        <button class="btn btn-ghost w-full justify-center mt-3">Lihat detail</button>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+        <div class="flex items-center justify-between mb-3"><div class="font-mono font-bold text-sm">3C05-251112-KBN02</div><span class="badge bg-amber-50 text-amber-700">review</span></div>
+        <div class="depth-track h-32" data-mini-chart="2"></div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div><div class="font-bold text-emerald-600">12</div><div class="text-slate-500">pass</div></div><div><div class="font-bold text-amber-600">8</div><div class="text-slate-500">tol</div></div><div><div class="font-bold text-rose-600">2</div><div class="text-slate-500">fail</div></div></div>
+        <button class="btn btn-ghost w-full justify-center mt-3">Lihat detail</button>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+        <div class="flex items-center justify-between mb-3"><div class="font-mono font-bold text-sm">3C02-251110-KBN01</div><span class="badge bg-rose-50 text-rose-700">re-QC</span></div>
+        <div class="depth-track h-32" data-mini-chart="1"></div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div><div class="font-bold text-emerald-600">4</div><div class="text-slate-500">pass</div></div><div><div class="font-bold text-amber-600">2</div><div class="text-slate-500">tol</div></div><div><div class="font-bold text-rose-600">15</div><div class="text-slate-500">fail</div></div></div>
+        <button class="btn btn-ghost w-full justify-center mt-3">Lihat detail</button>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-5">
+      <div class="sec-title mb-3">Export bulk</div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+        <button class="p-4 rounded-lg border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition text-left"><div class="font-semibold flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>TXT</div><div class="text-xs text-slate-500 mt-1">Format akhir QC</div></button>
+        <button class="p-4 rounded-lg border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition text-left"><div class="font-semibold flex items-center gap-2"><i data-lucide="image" class="w-4 h-4 text-slate-500"></i>PNG Chart</div><div class="text-xs text-slate-500 mt-1">Bulk per kanal</div></button>
+        <button class="p-4 rounded-lg border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition text-left"><div class="font-semibold flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-slate-500"></i>Excel Page 2/3</div><div class="text-xs text-slate-500 mt-1">Parameter &amp; kedalaman</div></button>
+        <button class="p-4 rounded-lg border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition text-left"><div class="font-semibold flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-slate-500"></i>Request PAT (UTM)</div><div class="text-xs text-slate-500 mt-1">Koordinat UTM</div></button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-peta">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Peta penugasan</h1><p class="text-sm text-slate-600 mt-1">Lokasi semua penugasan aktif + sample STA di KBN01-K02.</p></div>
+      <div class="flex gap-2">
+        <div class="inline-flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-soft"><button class="px-3 py-1.5 rounded-md text-xs font-semibold bg-brand-50 text-brand-700">Semua</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">Aktif</button><button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600">Selesai</button></div>
+        <button class="btn btn-ghost"><i data-lucide="locate" class="w-4 h-4"></i>Lokasi saya</button>
+      </div>
+    </header>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden">
+      <div id="main-map" style="height: 540px"></div>
+      <div class="p-4 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-brand-500"></span>Penugasan</div>
+        <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white"></span>STA pass</div>
+        <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-amber-500 border-2 border-white"></span>STA tolerance</div>
+        <div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-rose-500 border-2 border-white"></span>STA fail</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-konflik">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Konflik sinkronisasi</h1><p class="text-sm text-slate-600 mt-1">Dokumen yang diedit di lebih dari satu perangkat saat offline. Pilih versi yang akan disimpan.</p></div>
+      <div class="flex gap-2"><button class="btn btn-ghost"><i data-lucide="filter" class="w-4 h-4"></i>Filter</button><button class="btn btn-ghost"><i data-lucide="settings" class="w-4 h-4"></i>Strategi auto</button></div>
+    </header>
+    <div class="space-y-3">
+      <article class="bg-white rounded-xl border-2 border-rose-200 shadow-soft overflow-hidden">
+        <div class="p-4 bg-gradient-to-r from-rose-50 to-white border-b border-rose-100 flex flex-wrap items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-rose-100 grid place-items-center text-rose-600"><i data-lucide="git-merge" class="w-5 h-5"></i></div>
+          <div class="flex-1 min-w-0"><div class="font-bold font-mono">KBN01-K02 · STA 720</div><div class="text-xs text-slate-600">Data kedalaman · field <code class="font-mono">depth</code> berbeda</div></div>
+          <span class="badge bg-rose-100 text-rose-700">Kritis</span><span class="text-xs text-slate-500">terdeteksi 5 menit lalu</span>
+        </div>
+        <div class="grid md:grid-cols-2 divide-x divide-slate-100">
+          <label class="p-4 cursor-pointer hover:bg-emerald-50/30 transition relative">
+            <input type="radio" name="c1" checked class="absolute top-4 right-4"/>
+            <div class="flex items-center gap-2 mb-3"><div class="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-[10px] font-bold">FA</div><div class="text-xs"><div class="font-semibold text-slate-900">Versi kamu (lokal)</div><div class="text-slate-500">edit offline · 11 Mei 14:22</div></div></div>
+            <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 font-mono text-sm"><div class="text-slate-500 text-xs mb-1">depth</div><div class="font-bold text-emerald-600 text-lg">2.840</div><div class="text-slate-400 text-xs mt-2">final: −2.840 + WL 2.15 + … = <b>3.500</b></div></div>
+            <div class="mt-2 text-[11px] text-slate-500">Drag chart koreksi titik 720</div>
+          </label>
+          <label class="p-4 cursor-pointer hover:bg-emerald-50/30 transition relative">
+            <input type="radio" name="c1" class="absolute top-4 right-4"/>
+            <div class="flex items-center gap-2 mb-3"><div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 grid place-items-center text-white text-[10px] font-bold">AS</div><div class="text-xs"><div class="font-semibold text-slate-900">Versi Andi S. (server)</div><div class="text-slate-500">sync · 11 Mei 13:58</div></div></div>
+            <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 font-mono text-sm"><div class="text-slate-500 text-xs mb-1">depth</div><div class="font-bold text-rose-600 text-lg">2.710</div><div class="text-slate-400 text-xs mt-2">final: −2.710 + WL 2.15 + … = <b>3.370</b></div></div>
+            <div class="mt-2 text-[11px] text-slate-500">Edit langsung di QC processing</div>
+          </label>
+        </div>
+        <div class="p-3 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-2">
+          <button class="btn btn-ghost text-xs"><i data-lucide="line-chart" class="w-3.5 h-3.5"></i>Lihat di chart</button>
+          <button class="btn btn-ghost text-xs"><i data-lucide="history" class="w-3.5 h-3.5"></i>Riwayat perubahan</button>
+          <div class="ml-auto flex gap-2"><button class="btn btn-ghost text-xs">Tangguhkan</button><button class="btn btn-primary text-xs" onclick="resolveConflict('c1')"><i data-lucide="check" class="w-3.5 h-3.5"></i>Selesaikan</button></div>
+        </div>
+      </article>
+
+      <article class="bg-white rounded-xl border-2 border-amber-200 shadow-soft overflow-hidden">
+        <div class="p-4 bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 flex flex-wrap items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-amber-100 grid place-items-center text-amber-600"><i data-lucide="settings-2" class="w-5 h-5"></i></div>
+          <div class="flex-1 min-w-0"><div class="font-bold font-mono">KBN01-K02 · parameter</div><div class="text-xs text-slate-600">Field <code class="font-mono">water_level</code>, <code class="font-mono">tranducer</code> berbeda</div></div>
+          <span class="badge bg-amber-100 text-amber-800">Multi-field</span><span class="text-xs text-slate-500">terdeteksi 1 jam lalu</span>
+        </div>
+        <div class="p-4">
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-semibold"><tr><th class="text-left px-3 py-2">Field</th><th class="text-left px-3 py-2">Lokal (kamu)</th><th class="text-left px-3 py-2">Server (Andi)</th><th class="text-left px-3 py-2 w-20">Pakai</th></tr></thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="bg-amber-50/40"><td class="px-3 py-2.5 font-semibold">water_level</td><td class="px-3 py-2.5 font-mono text-emerald-700 font-semibold">2.150</td><td class="px-3 py-2.5 font-mono text-rose-700 font-semibold">2.180</td><td class="px-3 py-2.5"><select class="input input-sm"><option>lokal</option><option>server</option></select></td></tr>
+              <tr class="bg-amber-50/40"><td class="px-3 py-2.5 font-semibold">tranducer</td><td class="px-3 py-2.5 font-mono text-emerald-700 font-semibold">0.450</td><td class="px-3 py-2.5 font-mono text-rose-700 font-semibold">0.480</td><td class="px-3 py-2.5"><select class="input input-sm"><option>lokal</option><option selected>server</option></select></td></tr>
+              <tr><td class="px-3 py-2.5 text-slate-500">bed_float</td><td class="px-3 py-2.5 font-mono text-slate-500">0.080</td><td class="px-3 py-2.5 font-mono text-slate-500">0.080</td><td class="px-3 py-2.5 text-xs text-emerald-600 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i>sama</td></tr>
+              <tr><td class="px-3 py-2.5 text-slate-500">depth_correction</td><td class="px-3 py-2.5 font-mono text-slate-500">0.020</td><td class="px-3 py-2.5 font-mono text-slate-500">0.020</td><td class="px-3 py-2.5 text-xs text-emerald-600 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i>sama</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="p-3 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-2">
+          <button class="btn btn-ghost text-xs"><i data-lucide="zap" class="w-3.5 h-3.5"></i>Pilih semua lokal</button><button class="btn btn-ghost text-xs"><i data-lucide="cloud" class="w-3.5 h-3.5"></i>Pilih semua server</button>
+          <div class="ml-auto flex gap-2"><button class="btn btn-ghost text-xs">Tangguhkan</button><button class="btn btn-primary text-xs" onclick="resolveConflict('c2')"><i data-lucide="git-merge" class="w-3.5 h-3.5"></i>Gabungkan</button></div>
+        </div>
+      </article>
+    </div>
+    <div class="bg-brand-50 border border-brand-100 rounded-xl p-4 flex gap-3">
+      <i data-lucide="info" class="w-5 h-5 text-brand-600 shrink-0"></i>
+      <div class="text-sm text-brand-900"><div class="font-semibold mb-1">Strategi default</div><div class="text-brand-800 text-[13px] leading-relaxed">Saat sync: pakai <b>last-write-wins</b> untuk parameter (timestamp), dan <b>per-titik manual</b> untuk data kedalaman karena drag-edit sering kolisi. Bisa diubah di <a href="#/pengaturan" class="font-semibold underline">Pengaturan</a>.</div></div>
+    </div>
+  </div>
+</template>
+
+<template id="view-distrik">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Distrik &amp; Region</h1><p class="text-sm text-slate-600 mt-1">Distrik dikelompokkan per region kontraktor.</p></div>
+      <button class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Tambah distrik</button>
+    </header>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100"><div class="font-bold text-slate-900">PT. Ciptamas Bumi Subur</div><div class="text-xs text-slate-500 mt-0.5">Region · 8 distrik</div></div>
+        <div class="divide-y divide-slate-100">
+          <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50"><span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">3C01</span><span class="text-sm">Banyuasin</span><i data-lucide="more-horizontal" class="ml-auto w-4 h-4 text-slate-400"></i></div>
+          <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50"><span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">3C02</span><span class="text-sm">Musi Banyuasin</span><i data-lucide="more-horizontal" class="ml-auto w-4 h-4 text-slate-400"></i></div>
+          <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50"><span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">3C05</span><span class="text-sm">OKI Selatan</span><i data-lucide="more-horizontal" class="ml-auto w-4 h-4 text-slate-400"></i></div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100"><div class="font-bold text-slate-900">PT. Musi Nauli Lestari</div><div class="text-xs text-slate-500 mt-0.5">Region · 5 distrik</div></div>
+        <div class="divide-y divide-slate-100">
+          <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50"><span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">3M01</span><span class="text-sm">Musi Rawas</span><i data-lucide="more-horizontal" class="ml-auto w-4 h-4 text-slate-400"></i></div>
+          <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50"><span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">3M02</span><span class="text-sm">PALI</span><i data-lucide="more-horizontal" class="ml-auto w-4 h-4 text-slate-400"></i></div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100"><div class="font-bold text-slate-900">PT. Sumber Hijau Permai</div><div class="text-xs text-slate-500 mt-0.5">Region · 4 distrik</div></div>
+        <div class="divide-y divide-slate-100">
+          <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50"><span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">3S01</span><span class="text-sm">Lahat</span><i data-lucide="more-horizontal" class="ml-auto w-4 h-4 text-slate-400"></i></div>
+          <div class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50"><span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">3S02</span><span class="text-sm">Empat Lawang</span><i data-lucide="more-horizontal" class="ml-auto w-4 h-4 text-slate-400"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-sm"><i data-lucide="info" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i><div class="text-amber-900">Distrik dengan kode sama bisa muncul di region berbeda. Selalu pilih region dulu agar tidak konflik saat assign undangan.</div></div>
+  </div>
+</template>
+
+<template id="view-notifikasi">
+  <div class="space-y-5">
+    <header class="flex items-end justify-between flex-wrap gap-3">
+      <div><h1 class="text-2xl font-bold tracking-tight">Notifikasi <span id="notif-unread-count" class="text-base font-medium text-brand-600 ml-1"></span></h1><p class="text-sm text-slate-600 mt-1">Aktivitas terbaru di workspace.</p></div>
+      <div class="flex gap-2"><button class="btn btn-ghost" onclick="markAllNotifRead()"><i data-lucide="check-check" class="w-4 h-4"></i>Tandai semua dibaca</button><button class="btn btn-ghost"><i data-lucide="bell-off" class="w-4 h-4"></i>Atur notif</button></div>
+    </header>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-soft divide-y divide-slate-100" id="notif-list"></div>
+  </div>
+</template>
+
+<template id="view-pengaturan">
+  <div class="space-y-5">
+    <header><h1 class="text-2xl font-bold tracking-tight">Pengaturan</h1><p class="text-sm text-slate-600 mt-1">Threshold QC, profil, &amp; perangkat.</p></header>
+    <div class="grid lg:grid-cols-2 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100 sec-title">Threshold pengukuran</div>
+        <div class="p-4 space-y-4 text-sm">
+          <div>
+            <label class="text-xs font-semibold text-slate-700 flex justify-between">Lulus ≥ (m) <span class="text-brand-600 font-mono">live</span></label>
+            <input type="range" id="th-slider" class="range-brand w-full mt-2" min="1500" max="3500" step="50" value="2500" />
+            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1"><span>1.500</span><span>2.500</span><span>3.500</span></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-700">Lulus ≥</label><input id="th-lulus" class="input mt-1.5 font-mono" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Tidak lulus &lt;</label><input id="th-tidaklulus" class="input mt-1.5 font-mono" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Toleransi awal</label><input id="th-awal" class="input mt-1.5 font-mono" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Toleransi akhir</label><input id="th-akhir" class="input mt-1.5 font-mono" /></div>
+          </div>
+          <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs leading-relaxed" id="threshold-preview"></div>
+          <div class="text-[11px] text-slate-500 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i>Slider menggeser threshold <b>lulus</b> · garis chart kedalaman akan ikut update.</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+        <div class="p-4 border-b border-slate-100 sec-title">Akun</div>
+        <div class="p-4 space-y-3 text-sm">
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-700">Nama</label><input class="input mt-1.5" value="Fathul Akmal" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Role</label><input class="input mt-1.5" value="QC Operator" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">USV Code</label><input class="input mt-1.5 font-mono" value="KBN01" /></div>
+            <div><label class="text-xs font-semibold text-slate-700">Email</label><input class="input mt-1.5" value="fathul@hydrocanal.id" /></div>
+          </div>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between"><div><div class="text-sm font-semibold">Sinkron otomatis</div><div class="text-xs text-slate-500">Saat online, kirim antrian setiap 30 detik</div></div><div class="toggle-switch" data-toggle-setting="autoSync"></div></div>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between"><div><div class="text-sm font-semibold">Hanya admin yang dapat edit threshold</div><div class="text-xs text-slate-500">Operator hanya input data</div></div><div class="toggle-switch" data-toggle-setting="adminOnlyEdit"></div></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft lg:col-span-2">
+        <div class="p-4 border-b border-slate-100 sec-title">Penyimpanan lokal</div>
+        <div class="p-4 grid sm:grid-cols-3 gap-4 text-sm">
+          <div class="p-3 rounded-lg border border-slate-200"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pakai</div><div class="text-2xl font-bold mt-1">14.2 MB</div><div class="text-xs text-slate-500">dari 50 MB kuota</div><div class="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-brand-500 rounded-full" style="width:28%"></div></div></div>
+          <div class="p-3 rounded-lg border border-slate-200"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Dokumen</div><div class="text-2xl font-bold mt-1">847</div><div class="text-xs text-slate-500">3 collection: Data, Pengukuran, District</div></div>
+          <div class="p-3 rounded-lg border border-slate-200"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sync terakhir</div><div class="text-lg font-bold mt-1">5 menit lalu</div><div class="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5"><i data-lucide="check-circle-2" class="w-3 h-3"></i>Berhasil</div></div>
+        </div>
+        <div class="p-4 border-t border-slate-100 flex flex-wrap gap-2">
+          <button class="btn btn-ghost" onclick="forceSyncAll()"><i data-lucide="refresh-cw" class="w-4 h-4"></i>Sinkron paksa</button>
+          <button class="btn btn-ghost"><i data-lucide="download" class="w-4 h-4"></i>Ekspor backup</button>
+          <button id="reset-local-btn" class="btn btn-danger ml-auto"><i data-lucide="trash-2" class="w-4 h-4"></i>Reset lokal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="view-404">
+  <div class="min-h-[60vh] grid place-items-center text-center">
+    <div>
+      <div class="text-7xl font-extrabold tracking-tighter text-brand-200">404</div>
+      <div class="text-xl font-bold mt-2">Halaman tidak ditemukan</div>
+      <a href="#/" class="btn btn-primary mt-4 inline-flex">Kembali ke dashboard</a>
+    </div>
+  </div>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>
