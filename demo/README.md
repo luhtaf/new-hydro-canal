@@ -29,12 +29,12 @@ demo/
 | `#/login` | Login operator (USV code + PIN) |
 | `#/` | Dashboard admin — KPI, penugasan minggu ini, status QC |
 | `#/kalender` | Kalender bulanan + **klik tanggal** → side panel agenda hari itu |
-| `#/undangan` | List work order — **search live** + filter status |
+| `#/undangan` | **AOI list** — 1 baris/Canal ID + Order No sendiri, header Region/Area/Vendor, deadline countdown, filter Submitted/Assigned/In Progress/Done |
 | `#/undangan/baru` | Wizard 4-step + auto-split kanal >999m |
-| `#/undangan/detail` | Detail undangan + assign petugas + timeline |
-| `#/penugasan` | Tugas operator (card view) → klik buka detail |
-| `#/penugasan/detail` | Ringkasan penugasan + **mini map Leaflet** + progress steps + cuaca |
-| `#/lapangan/parameter` | Form parameter QC dengan validasi inline |
+| `#/undangan/detail` | Detail AOI per-canal (Measure Point, Coord UTM, SPK, deadline) + canal lain di kontraktor/distrik sama |
+| `#/penugasan` | Tugas operator **di-group Kontraktor → Distrik** (jawaban: 1 operator bisa multi-distrik/kontraktor) + tab Aktif/Selesai |
+| `#/penugasan/detail` | Ringkasan penugasan + Order No/MP/Coord/SPK + **mini map Leaflet** + progress + cuaca |
+| `#/lapangan/parameter` | Form parameter + Coord UTM + **QC Date/Budat & Measure Date (auto-clamp ke Finish Date)** + validasi inline |
 | `#/lapangan/kedalaman` | Tabel STA + Chart.js drag + drop-zone CSV + capture GPS |
 | `#/peta` | **Leaflet map** semua penugasan + sample STA (warna threshold) |
 | `#/qc` | Module existing — bulk export PNG/Excel/TXT/UTM |
@@ -46,6 +46,17 @@ demo/
 | `#/reports` | **Reports & Analytics** (admin-only) — Chart.js line trend + bar per region + donut + tabel operator |
 | `#/audit` | **Audit log** (admin-only) — timeline siapa-apa-kapan dengan filter user/action |
 | `#/help` | **Bantuan** — shortcuts, glossary STA/tranducer/dll, FAQ, kontak |
+
+## Model AOI / Undangan (revisi feedback WM)
+
+Demo ini sudah pakai struktur Excel "AOI QC Canal USV Notification" yang asli:
+
+- **1 baris = 1 Canal ID**, tiap canal punya **Order No sendiri** (mis. `2000349189`) — bukan 1 order per undangan
+- Header AOI: **Region** Palembang · **Area** SUMSEL P1 · **Vendor** PT. KARTA BHUMI NUSANTARA
+- Field: District, Request Date, Request Type, Panjang, Dimensi, **Measure Point**, Start/Finish Date (SPK), Contractor, **Coordinate X/Y (UTM)**, Status (Submitted/Assigned/In Progress/Done)
+- **Deadline = Request Date + 4 hari** (hari masuk = hari ke-1, maks 5 hari). Countdown badge: "Sisa N hari" / "Deadline hari ini" / "LEWAT". Demo "today" = 2026-05-18 (stabil).
+- **Penugasan** di-group **Kontraktor → Distrik** — menjawab pertanyaan WM: 1 operator bisa pegang banyak kontraktor & distrik sekaligus; tiap grup punya ringkasan (jumlah kanal, total meter, deadline terdekat).
+- **Parameter** punya **QC Date/Budat** (tgl olah s/d upload) + **Measure Date** (tgl ukur). Coba isi Measure Date > 31 Mei 2026 → auto-clamp ke Finish Date dengan warning.
 
 ## Role hierarchy
 

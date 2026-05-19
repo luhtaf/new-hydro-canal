@@ -39,20 +39,51 @@ App baru menyelesaikan itu, dan QC processing engine existing tetap di-reuse seb
 
 **Kenapa PouchDB + REST, bukan CouchDB penuh?** Schema `Data > canal_data[] > data[]` deeply-nested. Drag-edit per titik di CouchDB akan bikin revision tree membengkak. PouchDB di client + REST sync lebih aman: pertahankan backend existing, manual conflict resolution UI sudah dimodel di demo.
 
+## Domain model — AOI / Undangan (revisi per feedback WM, 18 Mei 2026)
+
+Sumber kebenaran: Excel **"AOI QC Canal USV Notification"** dari WM.
+
+**Header AOI:** Region (mis. Palembang) · Area (mis. SUMSEL P1) · Vendor pelaksana (mis. PT. KARTA BHUMI NUSANTARA).
+
+**Tiap baris = 1 Canal ID, dengan Order No sendiri-sendiri** (BUKAN 1 order untuk seluruh undangan). Kolom per baris:
+
+| Field | Catatan |
+|---|---|
+| District | mis. `D.SUNGAI_BEYUKU` |
+| Order No | unik per Canal ID, mis. `2000349189` |
+| Request Date | acuan deadline |
+| Request Type | `QC` / `RE-QC` |
+| Canal ID | mis. `SB180202` |
+| Panjang, Dimensi | mis. 1000 m, `8X5X3` |
+| Measure Point | numerik, mis. `382956` (tanpa spasi) |
+| Start Date / Finish Date | masa SPK |
+| Contractor Name | mis. `PT CIPTA BUANA SAMUDRA` (disingkat di chart) |
+| Coordinate X / Y | UTM zona 48S |
+| Status | `Submitted` → `Assigned` → `In Progress` → `Done` |
+
+**Aturan turunan:**
+
+- **Deadline = Request Date + 4 hari** (hari undangan masuk dihitung sebagai hari ke-1, maks 5 hari kerja). Tampilkan countdown + status LEWAT.
+- **Penugasan** = subset canal yang di-assign ke operator. Satu operator bisa pegang **>1 kontraktor & >1 distrik sekaligus** → UI grouping **Kontraktor → Distrik** dengan ringkasan (jumlah kanal, total meter, deadline terdekat).
+- **Parameter** punya 2 tanggal: **QC Date/Budat** (tanggal pengolahan s/d upload) dan **Measure Date** (tanggal pengukuran). Jika tanggal pengukuran asli **melewati Finish Date AOI**, Measure Date di-clamp ke Finish Date.
+- Penamaan output QC tetap `[district]-[YYMMDD]-[usv]-[urut][rev][qctype]`.
+
 ## Modul
 
 | Modul | Status |
 |---|---|
-| Undangan QC | Planned |
+| Undangan QC (AOI per-canal Order No) | Planned · model di-finalisasi |
+| Deadline tracker (Request Date + 5 hr) | Planned |
 | Kalender & jadwal | Planned |
-| Penugasan operator | Planned |
-| Input parameter (offline) | Planned |
+| Penugasan operator (grouped multi-distrik/kontraktor) | Planned |
+| Input parameter (offline) + QC Date & Measure Date clamp | Planned |
 | Input kedalaman + drag chart | Planned (reuse existing) |
 | QC processing & export | **Reuse from existing repo** |
 | District & region | Planned (extend existing) |
 | Konflik sync resolution | Planned |
 | Notifikasi | Planned |
 | Map view penugasan | Planned |
+| Reports / Audit log / User mgmt (admin) | Planned |
 
 ## Demo
 

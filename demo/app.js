@@ -11,26 +11,65 @@ const store = {
   del(k) { localStorage.removeItem(STORAGE_NS + k); },
 };
 
+// ---------- Demo "today" (stabil untuk countdown deadline) ----------
+const DEMO_TODAY = new Date('2026-05-18T00:00:00');
+
+// Deadline = Request Date + 4 hari (hari undangan masuk = hari ke-1, maks 5 hari)
+function deadlineInfo(requestDate) {
+  const req = new Date(requestDate + 'T00:00:00');
+  const dl = new Date(req); dl.setDate(dl.getDate() + 4);
+  const diff = Math.round((dl - DEMO_TODAY) / 86400000);
+  const dlStr = dl.toISOString().slice(0, 10);
+  let label, tone;
+  if (diff < 0)       { label = `LEWAT ${Math.abs(diff)} hari`; tone = 'rose'; }
+  else if (diff === 0){ label = 'Deadline hari ini';            tone = 'rose'; }
+  else if (diff === 1){ label = 'Sisa 1 hari';                  tone = 'amber'; }
+  else if (diff <= 2) { label = `Sisa ${diff} hari`;            tone = 'amber'; }
+  else                { label = `Sisa ${diff} hari`;            tone = 'emerald'; }
+  return { deadline: dlStr, diff, label, tone };
+}
+
+// Singkatan kontraktor untuk chart export
+function shortName(name) {
+  const map = {
+    'PT CIPTA BUANA SAMUDRA': 'PT. CBS', 'PT PUTRA RIMBA NUSANTARA': 'PT. PRN',
+    'PT MUSI NAULI LESTARI': 'PT. MNL', 'PT SUMBER HIJAU PERMAI': 'PT. SHP',
+  };
+  return map[name] || ('PT. ' + name.split(' ').slice(1).map(w => w[0]).join(''));
+}
+
 // ---------- Mock data ----------
 const MOCK = {
-  tasks: [
-    { id: 'KBN01-K01', region: 'PT. Ciptamas BS',   district: '3C01 Banyuasin',    date: '12 Mei', status: 'belum',   sta: '0 → 500',    kanal: 'KBN01-K01', lat: -2.9432, lng: 104.7551, distance: '34 km', undanganNo: 'PAT-2026-0042', qcOutput: null },
-    { id: 'KBN01-K02', region: 'PT. Musi Nauli',    district: '3C01 Banyuasin',    date: '12 Mei', status: 'jalan',   sta: '500 → 1200', kanal: 'KBN01-K02', lat: -2.9501, lng: 104.7612, distance: '34 km', undanganNo: 'PAT-2026-0042', qcOutput: null },
-    { id: 'KBN01-K03', region: 'PT. Sumber Hijau',  district: '3C05 OKI Selatan',  date: '13 Mei', status: 'belum',   sta: '0 → 420',    kanal: 'KBN01-K03', lat: -3.1245, lng: 105.0148, distance: '82 km', undanganNo: 'PAT-2026-0040', qcOutput: null },
-    { id: 'KBN01-D01', region: 'PT. Ciptamas BS',   district: '3C01 Banyuasin',    date: '08 Mei', status: 'selesai', sta: '0 → 500',    kanal: 'KBN01-D01', lat: -2.9388, lng: 104.7490, distance: '34 km', undanganNo: 'PAT-2026-0035', qcOutput: '3C01-260508-KBN01-1R0Q1' },
-    { id: 'KBN02-K07', region: 'PT. Ciptamas BS',   district: '3C05 OKI Selatan',  date: '07 Mei', status: 'selesai', sta: '0 → 380',    kanal: 'KBN02-K07', lat: -3.1812, lng: 105.0823, distance: '92 km', undanganNo: 'PAT-2026-0033', qcOutput: '3C05-260507-KBN02-1R0Q1' },
-    { id: 'KBN01-K05', region: 'PT. Ciptamas BS',   district: '3C02 Musi Banyuasin', date: '06 Mei', status: 'selesai', sta: '0 → 320',  kanal: 'KBN01-K05', lat: -2.7102, lng: 104.5018, distance: '108 km', undanganNo: 'PAT-2026-0032', qcOutput: '3C02-260506-KBN01-1R0Q2' },
-  ],
+  // Header AOI (dari Excel "AOI QC Canal USV Notification" — WM)
+  aoi: { region: 'Palembang', area: 'SUMSEL P1', vendor: 'PT. KARTA BHUMI NUSANTARA' },
+
+  // 1 baris per Canal ID — TIAP canal punya Order No sendiri
   undangan: [
-    { no: 'PAT-2026-0042', kontraktor: 'PT. Musi Nauli Lestari',    short: 'PT. MNL', region: '3C01 Banyuasin',     sched: '15 Mei 2026', kanal: 6, status: 'menunggu', tasks: ['KBN01-K01','KBN01-K02'] },
-    { no: 'PAT-2026-0041', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C05 OKI Selatan',   sched: '14 Mei 2026', kanal: 4, status: 'aktif',    tasks: [] },
-    { no: 'PAT-2026-0040', kontraktor: 'PT. Sumber Hijau Permai',   short: 'PT. SHP', region: '3S02 Empat Lawang',  sched: '13 Mei 2026', kanal: 3, status: 'aktif',    tasks: ['KBN01-K03'] },
-    { no: 'PAT-2026-0039', kontraktor: 'PT. Musi Nauli Lestari',    short: 'PT. MNL', region: '3M01 Musi Rawas',    sched: '12 Mei 2026', kanal: 8, status: 'aktif',    tasks: [] },
-    { no: 'PAT-2026-0038', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C02 Musi Banyuasin',sched: '11 Mei 2026', kanal: 5, status: 'selesai',  tasks: [] },
-    { no: 'PAT-2026-0035', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C01 Banyuasin',     sched: '08 Mei 2026', kanal: 4, status: 'selesai',  tasks: ['KBN01-D01'] },
-    { no: 'PAT-2026-0033', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C05 OKI Selatan',   sched: '07 Mei 2026', kanal: 3, status: 'selesai',  tasks: ['KBN02-K07'] },
-    { no: 'PAT-2026-0032', kontraktor: 'PT. Ciptamas Bumi Subur',   short: 'PT. CBS', region: '3C02 Musi Banyuasin',sched: '06 Mei 2026', kanal: 2, status: 'selesai',  tasks: ['KBN01-K05'] },
+    { orderNo: '2000349188', district: 'D.SUNGAI_BEYUKU',      requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SB180200', panjang: 1000, dimensi: '8X5X3',  measurePoint: '382955', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT CIPTA BUANA SAMUDRA',   coordX: 540840, coordY: 9674337, status: 'Assigned',    assignedTo: 'Fathul A.', usv: 'KBN01' },
+    { orderNo: '2000349189', district: 'D.SUNGAI_BEYUKU',      requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SB180202', panjang: 1000, dimensi: '8X5X3',  measurePoint: '382956', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT CIPTA BUANA SAMUDRA',   coordX: 540840, coordY: 9673402, status: 'In Progress', assignedTo: 'Fathul A.', usv: 'KBN01' },
+    { orderNo: '2000349190', district: 'D.SUNGAI_BEYUKU',      requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SB180204', panjang: 998,  dimensi: '8X5X3',  measurePoint: '382957', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT CIPTA BUANA SAMUDRA',   coordX: 540869, coordY: 9672320, status: 'Submitted',   assignedTo: null,        usv: null },
+    { orderNo: '2000348941', district: 'D.SUNGAI_PENYABUNGAN', requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SP223200', panjang: 1107, dimensi: '10X7X3', measurePoint: '382373', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT PUTRA RIMBA NUSANTARA', coordX: 544264, coordY: 9653212, status: 'Assigned',    assignedTo: 'Fathul A.', usv: 'KBN01' },
+    { orderNo: '2000348942', district: 'D.SUNGAI_PENYABUNGAN', requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SP223204', panjang: 1016, dimensi: '10X7X3', measurePoint: '382375', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT PUTRA RIMBA NUSANTARA', coordX: 546259, coordY: 9653944, status: 'Submitted',   assignedTo: null,        usv: null },
+    { orderNo: '2000348943', district: 'D.SUNGAI_PENYABUNGAN', requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SP223206', panjang: 977,  dimensi: '10X7X3', measurePoint: '382376', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT PUTRA RIMBA NUSANTARA', coordX: 547140, coordY: 9654291, status: 'Submitted',   assignedTo: null,        usv: null },
+    { orderNo: '2000348944', district: 'D.SUNGAI_PENYABUNGAN', requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SP223208', panjang: 570,  dimensi: '10X7X3', measurePoint: '382377', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT PUTRA RIMBA NUSANTARA', coordX: 547839, coordY: 9654548, status: 'Assigned',    assignedTo: 'Fathul A.', usv: 'KBN01' },
+    { orderNo: '2000349398', district: 'D.SUNGAI_PENYABUNGAN', requestDate: '2026-05-17', requestType: 'QC',    canalId: 'SPFB1400', panjang: 1009, dimensi: '8X5X3',  measurePoint: '382999', startDate: '2026-05-01', finishDate: '2026-05-31', contractor: 'PT MUSI NAULI LESTARI',   coordX: 548226, coordY: 9654589, status: 'In Progress', assignedTo: 'Fathul A.', usv: 'KBN01' },
+    { orderNo: '2000349402', district: 'D.AIR_SUGIHAN',        requestDate: '2026-05-14', requestType: 'RE-QC', canalId: 'AS091200', panjang: 1200, dimensi: '10X7X3', measurePoint: '383110', startDate: '2026-05-01', finishDate: '2026-05-20', contractor: 'PT MUSI NAULI LESTARI',   coordX: 552014, coordY: 9648770, status: 'Submitted',   assignedTo: null,        usv: null },
+    { orderNo: '2000349101', district: 'D.SUNGAI_BEYUKU',      requestDate: '2026-05-13', requestType: 'QC',    canalId: 'SB180188', panjang: 880,  dimensi: '8X5X3',  measurePoint: '382940', startDate: '2026-05-01', finishDate: '2026-05-17', contractor: 'PT CIPTA BUANA SAMUDRA',   coordX: 540210, coordY: 9675102, status: 'Done',       assignedTo: 'Fathul A.', usv: 'KBN01', qcOutput: '3C01-260517-KBN01-1R0Q1' },
+    { orderNo: '2000348880', district: 'D.SUNGAI_PENYABUNGAN', requestDate: '2026-05-12', requestType: 'QC',    canalId: 'SP223150', panjang: 640,  dimensi: '10X7X3', measurePoint: '382360', startDate: '2026-05-01', finishDate: '2026-05-16', contractor: 'PT PUTRA RIMBA NUSANTARA', coordX: 543880, coordY: 9652990, status: 'Done',       assignedTo: 'Andi S.',   usv: 'KBN02', qcOutput: '3C05-260516-KBN02-1R0Q1' },
   ],
+
+  // Penugasan = subset undangan yang di-assign ke operator (lihat assignedTo)
+  // Render-nya di-derive dari undangan; tasks ini cuma untuk detail tambahan
+  taskExtra: {
+    'SB180200': { lat: -2.9432, lng: 104.7551, distance: '34 km' },
+    'SB180202': { lat: -2.9501, lng: 104.7612, distance: '34 km' },
+    'SP223200': { lat: -3.1245, lng: 105.0148, distance: '82 km' },
+    'SP223208': { lat: -3.1410, lng: 105.0260, distance: '85 km' },
+    'SPFB1400': { lat: -3.1812, lng: 105.0823, distance: '92 km' },
+    'SB180188': { lat: -2.9388, lng: 104.7490, distance: '34 km' },
+    'SP223150': { lat: -3.1190, lng: 105.0090, distance: '80 km' },
+    'AS091200': { lat: -3.2450, lng: 105.1480, distance: '128 km' },
+  },
   initialQueue: [
     { id: 'q1', kind: 'Data kedalaman', label: 'KBN01-K02 · 35 titik', size: '12 KB', when: 'baru saja' },
     { id: 'q2', kind: 'Parameter QC',   label: 'KBN01-K02 (revisi 001)', size: '2 KB',  when: '5 menit lalu' },
@@ -95,6 +134,34 @@ const statusBadge = {
   menunggu: { c: 'bg-amber-50 text-amber-700',      d: 'bg-amber-500',                        t: 'Menunggu' },
 };
 
+// AOI status (dari Excel WM): Submitted / Assigned / In Progress / Done
+const aoiStatusBadge = {
+  'Submitted':   { c: 'bg-slate-100 text-slate-700',    d: 'bg-slate-500' },
+  'Assigned':    { c: 'bg-amber-50 text-amber-700',     d: 'bg-amber-500' },
+  'In Progress': { c: 'bg-brand-50 text-brand-700',     d: 'bg-brand-500 animate-pulse-dot' },
+  'Done':        { c: 'bg-emerald-50 text-emerald-700', d: 'bg-emerald-500' },
+};
+const ID_MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+function fmtShort(iso) { const d = new Date(iso + 'T00:00:00'); return `${d.getDate()} ${ID_MONTHS[d.getMonth()]}`; }
+function rawToTaskStatus(s) { return s === 'Done' ? 'selesai' : s === 'In Progress' ? 'jalan' : 'belum'; }
+
+// Penugasan = canal yang sudah di-assign ke operator (assignedTo terisi)
+function penugasanList() {
+  return MOCK.undangan.filter(u => u.assignedTo).map(u => {
+    const ex = MOCK.taskExtra[u.canalId] || { lat: -3.0, lng: 104.9, distance: '—' };
+    return {
+      id: u.canalId, kanal: u.canalId, orderNo: u.orderNo, undanganNo: u.orderNo,
+      district: u.district, contractor: u.contractor, region: shortName(u.contractor),
+      sta: `0 → ${u.panjang}`, panjang: u.panjang, dimensi: u.dimensi,
+      measurePoint: u.measurePoint, coordX: u.coordX, coordY: u.coordY,
+      requestDate: u.requestDate, startDate: u.startDate, finishDate: u.finishDate,
+      requestType: u.requestType, status: rawToTaskStatus(u.status), statusRaw: u.status,
+      date: fmtShort(u.requestDate), lat: ex.lat, lng: ex.lng, distance: ex.distance,
+      usv: u.usv, qcOutput: u.qcOutput || null, assignedTo: u.assignedTo,
+    };
+  });
+}
+
 // ---------- App state (persisted) ----------
 const state = {
   queue:        store.get('queue', MOCK.initialQueue),
@@ -129,7 +196,7 @@ const routes = {
   '/':                      { tpl: 'view-dashboard',              after: renderDashboard },
   '/kalender':              { tpl: 'view-kalender',               after: renderCalendar },
   '/undangan':              { tpl: 'view-undangan',               after: renderUndangan },
-  '/undangan/detail':       { tpl: 'view-undangan-detail' },
+  '/undangan/detail':       { tpl: 'view-undangan-detail',        after: renderUndanganDetail },
   '/penugasan':             { tpl: 'view-penugasan',              after: renderPenugasan },
   '/penugasan/detail':      { tpl: 'view-penugasan-detail',       after: renderPenugasanDetail },
   '/lapangan/parameter':    { tpl: 'view-lapangan-parameter' },
@@ -182,13 +249,14 @@ window.addEventListener('hashchange', route);
 function renderDashboard() {
   const wrap = document.getElementById('dashboard-tasks');
   if (!wrap) return;
-  wrap.innerHTML = MOCK.tasks.map(t => {
+  wrap.innerHTML = penugasanList().filter(t => t.status !== 'selesai').map(t => {
     const s = statusBadge[t.status];
+    const dl = deadlineInfo(t.requestDate);
     return `<a href="#/penugasan/detail" data-task="${t.id}" class="block p-4 hover:bg-slate-50 transition flex items-center gap-3">
-      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-50 to-brand-100 grid place-items-center text-brand-700 font-mono text-xs font-bold">${t.id.slice(-3)}</div>
+      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-50 to-brand-100 grid place-items-center text-brand-700 font-mono text-[10px] font-bold">${t.kanal.slice(-4)}</div>
       <div class="flex-1 min-w-0">
         <div class="font-semibold text-sm truncate">${t.kanal} · <span class="text-slate-500 font-normal">${t.district}</span></div>
-        <div class="text-xs text-slate-500 mt-0.5">STA ${t.sta} · ${t.region} · ${t.date} · <i data-lucide="map-pin" class="inline w-3 h-3"></i> ${t.distance}</div>
+        <div class="text-xs text-slate-500 mt-0.5">${t.region} · ${t.panjang}m · order ${t.orderNo} · <span class="text-${dl.tone}-600 font-semibold">${dl.label}</span></div>
       </div>
       <span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${s.t}</span>
       <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 ml-2"></i>
@@ -269,14 +337,14 @@ function renderUndangan() {
   const wrap = document.getElementById('undangan-rows');
   if (!wrap) return;
   const f = state.undanganFilter;
-  const q = f.q.toLowerCase();
+  const q = (f.q || '').toLowerCase();
   const filtered = MOCK.undangan.filter(u => {
     if (f.status !== 'semua' && u.status !== f.status) return false;
-    if (q && !(u.no.toLowerCase().includes(q) || u.kontraktor.toLowerCase().includes(q) || u.region.toLowerCase().includes(q))) return false;
+    if (q && !(u.orderNo.includes(q) || u.canalId.toLowerCase().includes(q) || u.contractor.toLowerCase().includes(q) || u.district.toLowerCase().includes(q))) return false;
     return true;
   });
   if (filtered.length === 0) {
-    wrap.innerHTML = `<tr><td colspan="8" class="px-4 py-10 text-center text-slate-400">
+    wrap.innerHTML = `<tr><td colspan="9" class="px-4 py-10 text-center text-slate-400">
       <i data-lucide="search-x" class="w-7 h-7 mx-auto mb-2"></i>
       <div class="text-sm">Tidak ada undangan yang cocok.</div>
     </td></tr>`;
@@ -284,51 +352,206 @@ function renderUndangan() {
     return;
   }
   wrap.innerHTML = filtered.map(u => {
-    const s = statusBadge[u.status];
+    const s = aoiStatusBadge[u.status] || aoiStatusBadge['Submitted'];
+    const dl = deadlineInfo(u.requestDate);
     return `<tr class="table-row">
-      <td class="px-4 py-3"><input type="checkbox" class="rounded" /></td>
-      <td class="px-4 py-3"><a href="#/undangan/detail" class="font-mono font-semibold text-slate-900 hover:text-brand-600">${u.no}</a></td>
-      <td class="px-4 py-3"><div class="font-medium">${u.kontraktor}</div><div class="text-xs text-slate-500">${u.short}</div></td>
-      <td class="px-4 py-3 text-slate-600">${u.region}</td>
-      <td class="px-4 py-3 text-slate-600">${u.sched}</td>
-      <td class="px-4 py-3"><span class="badge bg-slate-100 text-slate-700">${u.kanal} kanal</span></td>
-      <td class="px-4 py-3"><span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${s.t}</span></td>
-      <td class="px-4 py-3"><button class="p-1.5 rounded hover:bg-slate-100"><i data-lucide="more-horizontal" class="w-4 h-4 text-slate-400"></i></button></td>
+      <td class="px-3 py-3"><input type="checkbox" class="rounded" /></td>
+      <td class="px-3 py-3"><a href="#/undangan/detail" data-order="${u.orderNo}" class="font-mono font-semibold text-slate-900 hover:text-brand-600">${u.orderNo}</a><div class="text-[11px] text-slate-400">${u.requestType}</div></td>
+      <td class="px-3 py-3 font-mono font-semibold">${u.canalId}<div class="text-[11px] text-slate-400 font-sans">${u.panjang}m · ${u.dimensi}</div></td>
+      <td class="px-3 py-3 text-slate-600 text-xs">${u.district}</td>
+      <td class="px-3 py-3"><div class="text-sm">${u.contractor}</div><div class="text-[11px] text-slate-400">${shortName(u.contractor)}</div></td>
+      <td class="px-3 py-3 text-slate-600 text-xs">${u.requestDate}</td>
+      <td class="px-3 py-3"><span class="badge bg-${dl.tone}-50 text-${dl.tone}-700" title="Deadline ${dl.deadline}"><span class="badge-dot bg-${dl.tone}-500"></span>${dl.label}</span></td>
+      <td class="px-3 py-3"><span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${u.status}</span></td>
+      <td class="px-3 py-3"><button class="p-1.5 rounded hover:bg-slate-100"><i data-lucide="more-horizontal" class="w-4 h-4 text-slate-400"></i></button></td>
     </tr>`;
   }).join('');
+  wrap.querySelectorAll('[data-order]').forEach(a => a.addEventListener('click', () => { state.selectedOrder = a.dataset.order; }));
   const total = document.getElementById('undangan-total');
   if (total) total.textContent = `${filtered.length} dari ${MOCK.undangan.length}`;
+  lucide.createIcons();
+}
+
+function renderUndanganDetail() {
+  const wrap = document.getElementById('undangan-detail-content');
+  if (!wrap) return;
+  const u = MOCK.undangan.find(x => x.orderNo === state.selectedOrder) || MOCK.undangan[0];
+  const dl = deadlineInfo(u.requestDate);
+  const s = aoiStatusBadge[u.status] || aoiStatusBadge['Submitted'];
+  // Kanal lain dengan kontraktor + distrik sama (1 AOI batch bisa banyak canal)
+  const siblings = MOCK.undangan.filter(x => x.contractor === u.contractor && x.district === u.district && x.orderNo !== u.orderNo);
+  wrap.innerHTML = `
+    <nav class="flex items-center gap-1.5 text-xs text-slate-500"><a href="#/undangan" class="hover:text-slate-900">Undangan</a><i data-lucide="chevron-right" class="w-3 h-3"></i><span class="text-slate-900 font-medium font-mono">${u.orderNo}</span></nav>
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl font-bold tracking-tight font-mono">${u.orderNo}</h1>
+          <span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${u.status}</span>
+          <span class="badge bg-${dl.tone}-50 text-${dl.tone}-700"><span class="badge-dot bg-${dl.tone}-500"></span>${dl.label}</span>
+        </div>
+        <p class="text-sm text-slate-600 mt-1">${u.contractor} · ${u.district} · Canal <span class="font-mono">${u.canalId}</span></p>
+      </div>
+      <div class="flex gap-2 no-print">
+        <button class="btn btn-ghost" onclick="window.print()"><i data-lucide="printer" class="w-4 h-4"></i>Cetak</button>
+        <button class="btn btn-ghost" data-min-role="admin"><i data-lucide="copy" class="w-4 h-4"></i>Duplikat</button>
+        <button class="btn btn-primary" data-min-role="admin"><i data-lucide="user-plus" class="w-4 h-4"></i>Assign petugas</button>
+      </div>
+    </header>
+
+    <div class="grid sm:grid-cols-3 gap-3">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-3"><div class="text-[11px] text-slate-500 uppercase tracking-wider">Region</div><div class="font-semibold text-sm mt-0.5">${MOCK.aoi.region}</div></div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-3"><div class="text-[11px] text-slate-500 uppercase tracking-wider">Area</div><div class="font-semibold text-sm mt-0.5">${MOCK.aoi.area}</div></div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-3"><div class="text-[11px] text-slate-500 uppercase tracking-wider">Vendor</div><div class="font-semibold text-sm mt-0.5">${MOCK.aoi.vendor}</div></div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 sec-title">Detail AOI / Order</div>
+          <div class="p-4 grid sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">
+            <div><div class="text-xs text-slate-500">Order No</div><div class="font-mono font-semibold mt-0.5">${u.orderNo}</div></div>
+            <div><div class="text-xs text-slate-500">Canal ID</div><div class="font-mono font-semibold mt-0.5">${u.canalId}</div></div>
+            <div><div class="text-xs text-slate-500">Request Type</div><div class="font-semibold mt-0.5">${u.requestType}</div></div>
+            <div><div class="text-xs text-slate-500">District</div><div class="font-semibold mt-0.5">${u.district}</div></div>
+            <div><div class="text-xs text-slate-500">Contractor</div><div class="font-semibold mt-0.5">${u.contractor} <span class="text-slate-400 font-normal">· ${shortName(u.contractor)}</span></div></div>
+            <div><div class="text-xs text-slate-500">Panjang · Dimensi</div><div class="font-semibold mt-0.5">${u.panjang} m · ${u.dimensi}</div></div>
+            <div><div class="text-xs text-slate-500">Measure Point</div><div class="font-mono font-semibold mt-0.5">${u.measurePoint}</div></div>
+            <div><div class="text-xs text-slate-500">Coordinate X / Y (UTM)</div><div class="font-mono font-semibold mt-0.5">${u.coordX} / ${u.coordY}</div></div>
+            <div><div class="text-xs text-slate-500">Status</div><div class="font-semibold mt-0.5">${u.status}</div></div>
+            <div><div class="text-xs text-slate-500">Request Date</div><div class="font-semibold mt-0.5">${u.requestDate}</div></div>
+            <div><div class="text-xs text-slate-500">SPK Start → Finish</div><div class="font-semibold mt-0.5">${u.startDate} → ${u.finishDate}</div></div>
+            <div><div class="text-xs text-slate-500">Deadline (req+5hr)</div><div class="font-semibold mt-0.5 text-${dl.tone}-600">${dl.deadline} · ${dl.label}</div></div>
+            <div><div class="text-xs text-slate-500">Operator / USV</div><div class="font-semibold mt-0.5">${u.assignedTo ? u.assignedTo + ' (' + u.usv + ')' : 'Belum di-assign'}</div></div>
+            ${u.qcOutput ? `<div><div class="text-xs text-slate-500">QC Output</div><div class="font-mono font-semibold mt-0.5 text-brand-600">${u.qcOutput}</div></div>` : ''}
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between"><div class="sec-title">Canal lain · ${u.contractor} / ${u.district}</div><span class="text-xs text-slate-500">${siblings.length} canal lain</span></div>
+          ${siblings.length === 0 ? `<div class="p-4 text-sm text-slate-400">Tidak ada canal lain di kombinasi kontraktor/distrik ini.</div>` : `<div class="divide-y divide-slate-100">${siblings.map(x => {
+            const xs = aoiStatusBadge[x.status] || aoiStatusBadge['Submitted'];
+            return `<a href="#/undangan/detail" data-order="${x.orderNo}" class="flex items-center gap-3 p-3.5 hover:bg-slate-50">
+              <div class="w-9 h-9 rounded-lg bg-slate-50 grid place-items-center text-slate-500 font-mono text-[10px] font-bold">${x.canalId.slice(-3)}</div>
+              <div class="flex-1 min-w-0"><div class="font-mono font-semibold text-sm">${x.canalId} <span class="text-slate-400 font-sans font-normal">· order ${x.orderNo}</span></div><div class="text-xs text-slate-500">${x.panjang}m · ${x.dimensi} · MP ${x.measurePoint}</div></div>
+              <span class="badge ${xs.c}"><span class="badge-dot ${xs.d}"></span>${x.status}</span>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+            </a>`;
+          }).join('')}</div>`}
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="sec-title mb-3">Acuan deadline</div>
+          <div class="text-sm space-y-2">
+            <div class="flex justify-between"><span class="text-slate-500">Request Date</span><span class="font-semibold">${u.requestDate}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Maks proses</span><span class="font-semibold">5 hari</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Deadline</span><span class="font-semibold text-${dl.tone}-600">${dl.deadline}</span></div>
+            <div class="pt-2 border-t border-slate-100 text-xs text-slate-500">Hari undangan masuk dihitung sebagai hari ke-1. Hari ini (demo): <b>2026-05-18</b>.</div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-4">
+          <div class="sec-title mb-3">Timeline</div>
+          <div class="relative pl-5 space-y-3">
+            <div class="absolute left-1.5 top-2 bottom-2 w-px bg-slate-200"></div>
+            <div class="relative"><span class="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span><div class="text-sm font-semibold">AOI diterima dari WM</div><div class="text-xs text-slate-500">${u.requestDate}</div></div>
+            <div class="relative"><span class="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full ${u.assignedTo ? 'bg-brand-500 ring-brand-100' : 'bg-slate-300 ring-slate-100'} ring-4"></span><div class="text-sm font-semibold ${u.assignedTo ? '' : 'text-slate-500'}">Assign petugas</div><div class="text-xs text-slate-500">${u.assignedTo || '—'}</div></div>
+            <div class="relative"><span class="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full ${u.qcOutput ? 'bg-emerald-500 ring-emerald-100' : 'bg-slate-300 ring-slate-100'} ring-4"></span><div class="text-sm font-semibold ${u.qcOutput ? '' : 'text-slate-500'}">QC selesai &amp; output</div><div class="text-xs text-slate-500">${u.qcOutput || '—'}</div></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  wrap.querySelectorAll('[data-order]').forEach(a => a.addEventListener('click', () => { state.selectedOrder = a.dataset.order; }));
+  applyRole();
   lucide.createIcons();
 }
 
 function renderPenugasan() {
   const wrap = document.getElementById('penugasan-cards');
   if (!wrap) return;
-  wrap.innerHTML = MOCK.tasks.map(t => {
-    const s = statusBadge[t.status];
-    return `<a href="#/penugasan/detail" data-task="${t.id}" class="bg-white rounded-xl border border-slate-200 shadow-soft p-4 hover:shadow-card transition block">
-      <div class="flex items-center justify-between mb-3">
-        <div class="font-mono font-bold">${t.kanal}</div>
-        <span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${s.t}</span>
+  const tab = state.penugasanTab || 'aktif';
+  // Tab buttons
+  document.querySelectorAll('[data-penugasan-tab]').forEach(b => {
+    const on = b.dataset.penugasanTab === tab;
+    b.classList.toggle('bg-brand-50', on); b.classList.toggle('text-brand-700', on);
+    b.classList.toggle('text-slate-600', !on);
+  });
+
+  let list = penugasanList();
+  list = tab === 'selesai' ? list.filter(t => t.status === 'selesai') : list.filter(t => t.status !== 'selesai');
+
+  if (list.length === 0) {
+    wrap.innerHTML = `<div class="col-span-full empty-state"><div class="empty-state-icon"><i data-lucide="clipboard-check" class="w-7 h-7"></i></div><div class="font-semibold">Tidak ada penugasan ${tab}</div><div class="text-sm text-slate-500 mt-1">Cek tab lainnya atau tunggu assign dari admin.</div></div>`;
+    lucide.createIcons(); return;
+  }
+
+  // Group: Kontraktor → District (jawaban WM: multi-distrik & kontraktor)
+  const byContractor = {};
+  list.forEach(t => { (byContractor[t.contractor] ||= []).push(t); });
+
+  const blocks = Object.entries(byContractor).map(([contractor, items]) => {
+    const totalM = items.reduce((a, b) => a + b.panjang, 0);
+    const nearest = items.map(i => deadlineInfo(i.requestDate)).sort((a, b) => a.diff - b.diff)[0];
+    const byDistrict = {};
+    items.forEach(t => { (byDistrict[t.district] ||= []).push(t); });
+
+    const districtBlocks = Object.entries(byDistrict).map(([district, ds]) => `
+      <div class="mt-3">
+        <div class="flex items-center gap-2 px-1 mb-2 text-xs font-semibold text-slate-500">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>${district}
+          <span class="text-slate-400 font-normal">· ${ds.length} kanal · ${ds.reduce((a,b)=>a+b.panjang,0)}m</span>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          ${ds.map(t => {
+            const s = statusBadge[t.status]; const dl = deadlineInfo(t.requestDate);
+            return `<a href="#/penugasan/detail" data-task="${t.id}" class="bg-white rounded-xl border border-slate-200 shadow-soft p-4 hover:shadow-card transition block">
+              <div class="flex items-center justify-between mb-2">
+                <div class="font-mono font-bold">${t.kanal}</div>
+                <span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${s.t}</span>
+              </div>
+              <div class="space-y-1.5 text-sm">
+                <div class="flex items-center gap-2 text-slate-600"><i data-lucide="hash" class="w-3.5 h-3.5"></i>Order ${t.orderNo}</div>
+                <div class="flex items-center gap-2 text-slate-600"><i data-lucide="ruler" class="w-3.5 h-3.5"></i>${t.panjang}m · ${t.dimensi} · MP ${t.measurePoint}</div>
+                <div class="flex items-center gap-2 text-slate-600"><i data-lucide="navigation" class="w-3.5 h-3.5"></i>${t.coordX} / ${t.coordY} · ${t.distance}</div>
+                <div class="flex items-center gap-2"><i data-lucide="alarm-clock" class="w-3.5 h-3.5 text-${dl.tone}-500"></i><span class="text-${dl.tone}-600 font-semibold">${dl.label}</span> <span class="text-slate-400 text-xs">(SPK s/d ${t.finishDate})</span></div>
+              </div>
+              <div class="mt-3 text-xs font-semibold text-brand-600 inline-flex items-center gap-1">Lihat detail <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></div>
+            </a>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
+
+    return `<section class="bg-slate-50/60 rounded-2xl border border-slate-200 p-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white"><i data-lucide="building-2" class="w-4 h-4"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-slate-900">${contractor}</div>
+          <div class="text-xs text-slate-500">${shortName(contractor)} · ${Object.keys(byDistrict).length} distrik</div>
+        </div>
+        <span class="badge bg-white border border-slate-200 text-slate-700">${items.length} kanal</span>
+        <span class="badge bg-white border border-slate-200 text-slate-700">${totalM.toLocaleString('id')} m</span>
+        <span class="badge bg-${nearest.tone}-50 text-${nearest.tone}-700"><span class="badge-dot bg-${nearest.tone}-500"></span>${nearest.label}</span>
       </div>
-      <div class="space-y-1.5 text-sm">
-        <div class="flex items-center gap-2 text-slate-600"><i data-lucide="building-2" class="w-3.5 h-3.5"></i>${t.region}</div>
-        <div class="flex items-center gap-2 text-slate-600"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i>${t.district} · ${t.distance}</div>
-        <div class="flex items-center gap-2 text-slate-600"><i data-lucide="ruler" class="w-3.5 h-3.5"></i>STA ${t.sta}</div>
-        <div class="flex items-center gap-2 text-slate-600"><i data-lucide="calendar" class="w-3.5 h-3.5"></i>${t.date}</div>
-      </div>
-      <div class="mt-4 text-xs font-semibold text-brand-600 inline-flex items-center gap-1">Lihat detail <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></div>
-    </a>`;
+      ${districtBlocks}
+    </section>`;
   }).join('');
+
+  wrap.className = 'space-y-4';
+  wrap.innerHTML = `<div class="bg-brand-50 border border-brand-100 rounded-xl p-3 flex items-start gap-2.5 text-sm">
+      <i data-lucide="info" class="w-4 h-4 text-brand-600 shrink-0 mt-0.5"></i>
+      <div class="text-brand-900">Penugasan dikelompokkan per <b>Kontraktor → Distrik</b>. Satu operator bisa pegang beberapa kontraktor & distrik sekaligus dalam satu waktu.</div>
+    </div>${blocks}`;
   wrap.querySelectorAll('[data-task]').forEach(a => a.addEventListener('click', () => { state.selectedTask = a.dataset.task; }));
   lucide.createIcons();
 }
 
 function renderPenugasanDetail() {
-  const t = MOCK.tasks.find(x => x.id === state.selectedTask) || MOCK.tasks[1];
+  const list = penugasanList();
+  const t = list.find(x => x.id === state.selectedTask) || list[0];
   const wrap = document.getElementById('penugasan-detail-content');
-  if (!wrap) return;
+  if (!wrap || !t) return;
   const s = statusBadge[t.status];
+  const dl = deadlineInfo(t.requestDate);
   wrap.innerHTML = `
     <header class="flex flex-wrap items-start justify-between gap-3">
       <div>
@@ -336,9 +559,10 @@ function renderPenugasanDetail() {
           <h1 class="text-2xl font-bold tracking-tight font-mono">${t.kanal}</h1>
           <span class="badge ${s.c}"><span class="badge-dot ${s.d}"></span>${s.t}</span>
         </div>
-        <p class="text-sm text-slate-600 mt-1">${t.region} · ${t.district}</p>
+        <p class="text-sm text-slate-600 mt-1">${t.contractor} · ${t.district}</p>
         <p class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
-          <span class="inline-flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3"></i>Dari undangan: <a href="#/undangan/detail" class="text-brand-600 font-semibold hover:underline">${t.undanganNo}</a></span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="hash" class="w-3 h-3"></i>Order No: <a href="#/undangan/detail" class="text-brand-600 font-semibold hover:underline font-mono">${t.orderNo}</a></span>
+          <span class="text-slate-300">·</span><span class="inline-flex items-center gap-1"><i data-lucide="alarm-clock" class="w-3 h-3 text-${dl.tone}-500"></i><span class="text-${dl.tone}-600 font-semibold">${dl.label}</span></span>
           ${t.qcOutput ? `<span class="text-slate-300">·</span><span class="inline-flex items-center gap-1"><i data-lucide="file-text" class="w-3 h-3"></i>Output: <a href="#/qc" class="text-brand-600 font-mono font-semibold hover:underline">${t.qcOutput}</a></span>` : ''}
         </p>
       </div>
@@ -352,13 +576,19 @@ function renderPenugasanDetail() {
       <div class="lg:col-span-2 space-y-4">
         <div class="bg-white rounded-xl border border-slate-200 shadow-soft">
           <div class="p-4 border-b border-slate-100 sec-title">Info pekerjaan</div>
-          <div class="p-4 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div><div class="text-xs text-slate-500">ID Kanal</div><div class="font-mono font-semibold mt-0.5">${t.id}</div></div>
-            <div><div class="text-xs text-slate-500">STA</div><div class="font-semibold mt-0.5">${t.sta}</div></div>
-            <div><div class="text-xs text-slate-500">Jadwal</div><div class="font-semibold mt-0.5">${t.date} 2026 · 08:00 – 16:00</div></div>
-            <div><div class="text-xs text-slate-500">Estimasi durasi</div><div class="font-semibold mt-0.5">~4 jam</div></div>
-            <div><div class="text-xs text-slate-500">Operator</div><div class="font-semibold mt-0.5">Fathul A. (KBN01)</div></div>
-            <div><div class="text-xs text-slate-500">QC Type</div><div class="font-semibold mt-0.5">QC (Q1) · Revisi 000</div></div>
+          <div class="p-4 grid sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">
+            <div><div class="text-xs text-slate-500">Canal ID</div><div class="font-mono font-semibold mt-0.5">${t.kanal}</div></div>
+            <div><div class="text-xs text-slate-500">Order No</div><div class="font-mono font-semibold mt-0.5">${t.orderNo}</div></div>
+            <div><div class="text-xs text-slate-500">Request Type</div><div class="font-semibold mt-0.5">${t.requestType}</div></div>
+            <div><div class="text-xs text-slate-500">District</div><div class="font-semibold mt-0.5">${t.district}</div></div>
+            <div><div class="text-xs text-slate-500">Kontraktor</div><div class="font-semibold mt-0.5">${shortName(t.contractor)}</div></div>
+            <div><div class="text-xs text-slate-500">Panjang · Dimensi</div><div class="font-semibold mt-0.5">${t.panjang}m · ${t.dimensi}</div></div>
+            <div><div class="text-xs text-slate-500">Measure Point</div><div class="font-mono font-semibold mt-0.5">${t.measurePoint}</div></div>
+            <div><div class="text-xs text-slate-500">SPK Start–Finish</div><div class="font-semibold mt-0.5">${t.startDate} → ${t.finishDate}</div></div>
+            <div><div class="text-xs text-slate-500">Request Date</div><div class="font-semibold mt-0.5">${t.requestDate} <span class="text-${dl.tone}-600">(${dl.label})</span></div></div>
+            <div><div class="text-xs text-slate-500">Operator / USV</div><div class="font-semibold mt-0.5">${t.assignedTo} (${t.usv})</div></div>
+            <div><div class="text-xs text-slate-500">Koordinat (UTM 48S)</div><div class="font-mono font-semibold mt-0.5">${t.coordX} / ${t.coordY}</div></div>
+            <div><div class="text-xs text-slate-500">QC Type</div><div class="font-semibold mt-0.5">${t.requestType} · Revisi 000</div></div>
           </div>
         </div>
 
@@ -545,15 +775,15 @@ function renderMap() {
     state.map = map;
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', { subdomains: 'abcd', attribution: '&copy; OSM &copy; CARTO', maxZoom: 19 }).addTo(map);
     const bounds = [];
-    MOCK.tasks.forEach(t => {
-      const icon = L.divIcon({ className: '', html: `<div class="map-pin task"><span>${t.id.slice(-3)}</span></div>`, iconSize: [28, 36], iconAnchor: [14, 36] });
+    const plist = penugasanList();
+    plist.forEach(t => {
+      const icon = L.divIcon({ className: '', html: `<div class="map-pin task"><span>${t.kanal.slice(-3)}</span></div>`, iconSize: [28, 36], iconAnchor: [14, 36] });
       const m = L.marker([t.lat, t.lng], { icon }).addTo(map);
-      const s = statusBadge[t.status];
-      m.bindPopup(`<div style="font-family:Inter,sans-serif"><b>${t.kanal}</b> <span style="color:#0284c7">${t.distance}</span><br/>${t.district}<br/><small>${t.region} · ${t.date}</small></div>`);
+      m.bindPopup(`<div style="font-family:Inter,sans-serif"><b>${t.kanal}</b> <span style="color:#0284c7">${t.distance}</span><br/>${t.district}<br/><small>${shortName(t.contractor)} · order ${t.orderNo}</small></div>`);
       bounds.push([t.lat, t.lng]);
     });
-    // STA depth points sample around K02
-    const k02 = MOCK.tasks[1];
+    // STA depth points sample around kanal pertama yang jalan
+    const k02 = plist.find(p => p.status === 'jalan') || plist[0];
     for (let i = 0; i < 12; i++) {
       const lat = k02.lat + (Math.random() - 0.5) * 0.012;
       const lng = k02.lng + (i - 5) * 0.002;
@@ -1357,6 +1587,26 @@ const VALIDATORS = {
   },
 };
 
+// Measure Date clamp: jika > Finish Date AOI → set ke Finish Date
+function attachParameterDateLogic() {
+  const md = document.getElementById('param-measure-date');
+  const fd = document.getElementById('param-finish-date');
+  const msg = document.getElementById('param-measure-msg');
+  if (!md || !fd || md.dataset.wired) return;
+  md.dataset.wired = '1';
+  const finish = fd.textContent.trim();
+  const run = () => {
+    if (md.value && md.value > finish) {
+      md.value = finish;
+      msg.innerHTML = `<span class="text-amber-600 font-semibold">⚠ Auto-clamp ke Finish Date (${finish}) — pengukuran lewat SPK.</span>`;
+      toast(`Measure Date di-clamp ke Finish Date ${finish}`, 'warn');
+    } else {
+      msg.textContent = 'Tanggal pengukuran asli.';
+    }
+  };
+  md.addEventListener('change', run);
+}
+
 function attachValidators() {
   document.querySelectorAll('[data-validate]').forEach(inp => {
     if (inp.dataset.validatorAttached) return;
@@ -1456,12 +1706,15 @@ window.addEventListener('DOMContentLoaded', () => {
       tab.classList.remove('text-slate-600');
       renderUndangan();
     }
+    const pt = e.target.closest('[data-penugasan-tab]');
+    if (pt) { state.penugasanTab = pt.dataset.penugasanTab; renderPenugasan(); }
   });
 
   // Drop zones + page-specific hooks (re-attach after each route)
   window.addEventListener('hashchange', () => setTimeout(() => {
     attachDropZones();
     attachValidators();
+    attachParameterDateLogic();
     // Conflict trigger
     const tcb = document.getElementById('trigger-conflict-btn');
     if (tcb && !tcb.dataset.wired) { tcb.dataset.wired = '1'; tcb.addEventListener('click', triggerConflict); }
@@ -1482,6 +1735,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     attachDropZones();
     attachValidators();
+    attachParameterDateLogic();
     const tcb = document.getElementById('trigger-conflict-btn');
     if (tcb && !tcb.dataset.wired) { tcb.dataset.wired = '1'; tcb.addEventListener('click', triggerConflict); }
     document.querySelectorAll('[data-export]').forEach(b => {
