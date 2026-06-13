@@ -38,3 +38,13 @@ lerna-debug.log*
 *.tgz
 .cache/
 tmp/
+
+# Personal / work files yang nyasar ke root project
+*.docx
+*.xlsx
+*.xls
+*.pdf
+*.pptx
+Reimbursement*
+Pengajuan*
+Salinan*
