@@ -334,6 +334,59 @@ Indexes: `{ userId: 1, read: 1, ts: -1 }`.
 
 ## API endpoints
 
+### Auth strategy — offline-first dilema
+
+> Tension: app offline-first, tapi user juga butuh auth aman. Kalau pure SSO, hilang sinyal = gak bisa login. Kalau pure local PIN, lemah audit identitas.
+
+**Roadmap auth bertahap**:
+
+#### MVP / launch (Phase 1) — Opsi A: Local PIN + JWT cached 30 hari
+
+- Login `POST /auth/login` `{ usv, pin }` → JWT signed (HS256, secret di env)
+- JWT TTL: **30 hari** (sengaja panjang untuk offline tolerance)
+- Client cache JWT di IndexedDB (lebih aman dari localStorage karena origin-scoped + larger quota)
+- Offline buka app: pakai cached JWT, decode local, cek expiry
+- Online tab focus: silent `POST /auth/refresh` → JWT baru (sliding window)
+- Lupa PIN: admin reset via internal channel + new JWT
+- ✅ Cocok untuk closed user group 10-20 operator, no Google Workspace requirement
+- ❌ Tidak ada external identity audit
+
+#### Tahun ke-2 (saat company adopt Google Workspace) — Opsi C: Hybrid SSO + local PIN
+
+Mirip pattern banking app (BCA mobile, Jenius):
+
+1. **First login**: wajib SSO Google OAuth (identity audit)
+2. **App generate local PIN** (user pilih 4-6 digit)
+3. **Subsequent login**: PIN aja (offline OK)
+4. **Online silent re-auth**: tiap app fokus saat online → refresh SSO token di background
+5. **Trust window**: PIN valid 30 hari sejak last successful SSO refresh
+6. **Expired trust window** (offline > 30 hari): PIN ditolak, harus re-SSO saat online
+7. **Lupa PIN**: harus SSO ulang (recovery via Google)
+8. **Emergency** (lupa PIN + lapangan urgent): admin generate one-time recovery code via SMS/WA
+
+Implementation outline:
+```ts
+// Trust window stored di server saat login
+user.deviceTrust = { deviceId, lastSsoSyncAt, pinHash, trustWindowDays: 30 };
+
+// Check di middleware
+function requireAuth(req) {
+  const { jwt } = req.cookies;
+  const payload = verify(jwt);
+  const trust = await DeviceTrust.findOne({ userId: payload.uid, deviceId: payload.did });
+  const daysSinceSso = (Date.now() - trust.lastSsoSyncAt) / 86400000;
+  if (daysSinceSso > trust.trustWindowDays) {
+    throw new Error('TRUST_EXPIRED'); // client redirect ke SSO re-auth
+  }
+}
+```
+
+#### Jangan langsung Opsi B (SSO only)
+
+- Access token TTL 1 jam → operator yang offline > 1 jam locked
+- Workaround extend TTL 7 hari masih fragile
+- Skip kecuali ada constraint regulatory yang wajibkan SSO mandatory
+
 ### Auth (`routes/auth.ts`)
 
 | Method | Path | Body | Response | Role |
