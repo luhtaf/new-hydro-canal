@@ -4,9 +4,23 @@ Platform operasi & QC kanal — penerus [fullstack-hydrocanal-graph](https://git
 
 ## Status
 
-🚧 **Phase 0 — Planning & UI mockup.** Belum ada kode produksi.
+🚧 **Phase 0 — Planning & UI mockup selesai.** Implementasi produksi belum mulai.
 
-Mockup MVP-nya ada di [`demo/`](./demo) — single-page app static, drag-drop ke Netlify atau buka lokal.
+Mockup MVP-nya ada di [`demo/`](./demo) — drag-drop ke Netlify atau buka lokal.
+
+## 📚 Docs (resume di sesi baru, baca berurutan)
+
+| File | Isi |
+|---|---|
+| [`README.md`](./README.md) | Overview + arsitektur + modul list (file ini) |
+| [`DOMAIN.md`](./DOMAIN.md) | Data model AOI + aturan turunan (sumber kebenaran domain) |
+| [`FEEDBACK.md`](./FEEDBACK.md) | Semua feedback historis (PPTX + existing terealisasi + WM + Fathul) + mapping ke phase |
+| [`PLAN.md`](./PLAN.md) | Master roadmap + tech stack + phase list + existing system inventory |
+| [`PLAN-FE.md`](./PLAN-FE.md) | Frontend detail: per-page, state, helpers, **demo subset wajib dipertahankan** |
+| [`PLAN-BE.md`](./PLAN-BE.md) | Backend detail: schema (existing + baru), endpoint per route, sync algorithm, port existing logic |
+| [`demo/README.md`](./demo/README.md) | Fitur demo + cara coba |
+
+Implementasi = **superset dari app lama**: semua fitur existing fullstack-hydrocanal-graph wajib di-port + ditambah ops layer baru (undangan, penugasan, offline, role, reports, audit). Detail di `PLAN.md`.
 
 ## Kenapa app baru?
 
