@@ -8,26 +8,31 @@ import { LoginPage, ProtectedRoute } from './features/auth/index.js';
 import { dataRoutes } from './features/data/index.js';
 import { KonflikList } from './features/konflik/KonflikList.js';
 
+// --- Phase 2 ops layer: route config per slice (absolute paths + handle.requireRole) ---
+import { undanganRoutes } from './features/undangan/index.js';
+import { penugasanRoutes } from './features/penugasan/index.js';
+import { lapanganParameterRoutes } from './features/lapangan-parameter/index.js';
+import { lapanganKedalamanRoutes } from './features/lapangan-kedalaman/index.js';
+import { petaRoutes } from './features/peta/index.js';
+import { kalenderRoutes } from './features/kalender/index.js';
+import { notifikasiRoutes } from './features/notifikasi/index.js';
+import { pengaturanRoutes } from './features/pengaturan/index.js';
+import { usersRoutes } from './features/users/index.js';
+import { auditRoutes } from './features/audit/index.js';
+import { helpRoutes } from './features/help/index.js';
+
 /**
  * Router shell.
  *
  * RootLayout (TopNav/Sidebar/overlay) membungkus semua route lewat <Outlet>.
- * Tiap route fitur SEKARANG memakai Placeholder; slice fitur menggantinya dengan
- * komponen asli secara lazy, mis:
- *
- *   { path: 'penugasan', lazy: () => import('./features/penugasan/PenugasanPage.js')
- *       .then(m => ({ Component: m.PenugasanPage })) }
- *
- * Route admin-only dibungkus <RequireAdmin> (operator → NoAccessPage). Gating UI
- * (sidebar hide) sudah lewat data-min-role + visibleGroups; ini lapisan akses URL.
+ * Route fitur Phase 2 dipasang lewat config slice masing-masing (spread route array
+ * ATAU lazy default export). Gating admin lewat `handle.requireRole: 'admin'` yang
+ * dibaca <RouteRoleGuard> di RootLayout (operator → NoAccessPage). Route admin yang
+ * BELUM punya slice (distrik) tetap dibungkus <RequireAdmin> manual.
  *
  * Catatan: pakai createBrowserRouter (history API), bukan hash. Demo memang hash,
  * tapi produksi pakai path bersih (Pages SPA fallback). Selector tour disesuaikan.
  */
-
-const ph = (title: string, icon: IconName, feature?: string) => ({
-  Component: makePlaceholder(title, icon, feature),
-});
 
 export const router = createBrowserRouter([
   // Login chromeless (di luar RootLayout: tanpa nav/sidebar). Spec § C: enroll/add account.
@@ -39,30 +44,48 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, ...ph('Dashboard', 'layout-dashboard', 'dashboard') },
-      { path: 'kalender', ...ph('Kalender', 'calendar-days', 'kalender') },
-      { path: 'undangan', ...ph('Undangan QC', 'mail', 'undangan') },
+      // Dashboard (index '/') — semua role.
       {
-        path: 'undangan/baru',
-        element: (
-          <RequireAdmin>
-            <PlaceholderRoute title="Undangan baru" icon="plus-circle" feature="undangan" />
-          </RequireAdmin>
-        ),
+        index: true,
+        lazy: async () => ({
+          Component: (await import('./features/dashboard/index.js')).DashboardPage,
+        }),
       },
-      { path: 'undangan/:orderNo', ...ph('Detail undangan', 'mail', 'undangan') },
-      { path: 'penugasan', ...ph('Penugasan Saya', 'clipboard-list', 'penugasan') },
-      { path: 'penugasan/:canalId', ...ph('Detail penugasan', 'clipboard-list', 'penugasan') },
-      { path: 'lapangan/parameter', ...ph('Input Parameter', 'form-input', 'lapangan') },
-      { path: 'lapangan/parameter/:canalId', ...ph('Input Parameter', 'form-input', 'lapangan') },
-      { path: 'lapangan/kedalaman', ...ph('Input Kedalaman', 'ruler', 'lapangan') },
-      { path: 'lapangan/kedalaman/:canalId', ...ph('Input Kedalaman', 'ruler', 'lapangan') },
-      { path: 'qc', ...ph('QC Processing', 'line-chart', 'qc') },
-      { path: 'peta', ...ph('Peta penugasan', 'map', 'peta') },
+
+      // Ops layer Phase 2 (spread route config slice — absolute paths).
+      ...kalenderRoutes,
+      ...undanganRoutes,
+      ...penugasanRoutes,
+      ...lapanganParameterRoutes,
+      ...lapanganKedalamanRoutes,
+      ...petaRoutes,
+      ...notifikasiRoutes,
+      ...pengaturanRoutes,
+      ...helpRoutes,
+
+      // QC Processing — lazy default export (slice tak ekspor route array).
+      {
+        path: 'qc',
+        lazy: async () => ({
+          Component: (await import('./features/qc/QcProcessing.js')).default,
+        }),
+      },
+
+      // Konflik (Phase 1 slice).
       { path: 'konflik', element: <KonflikList /> },
-      { path: 'notifikasi', ...ph('Notifikasi', 'bell', 'notifikasi') },
-      { path: 'pengaturan', ...ph('Pengaturan', 'settings', 'pengaturan') },
-      { path: 'help', ...ph('Bantuan', 'circle-help', 'help') },
+
+      // --- Admin-only (gating via handle.requireRole di RouteRoleGuard) ---
+      ...usersRoutes, // /users (handle.requireRole admin)
+      ...auditRoutes, // /audit (handle.requireRole admin)
+      {
+        path: 'reports',
+        handle: { requireRole: 'admin' },
+        lazy: async () => ({
+          Component: (await import('./features/reports/ReportsPage.js')).default,
+        }),
+      },
+
+      // Distrik & Region — belum ada slice; placeholder admin-only (wrapper manual).
       {
         path: 'distrik',
         element: (
@@ -71,30 +94,7 @@ export const router = createBrowserRouter([
           </RequireAdmin>
         ),
       },
-      {
-        path: 'users',
-        element: (
-          <RequireAdmin>
-            <PlaceholderRoute title="Operator & akun" icon="users" feature="users" />
-          </RequireAdmin>
-        ),
-      },
-      {
-        path: 'reports',
-        element: (
-          <RequireAdmin>
-            <PlaceholderRoute title="Reports & Analytics" icon="bar-chart-3" feature="reports" />
-          </RequireAdmin>
-        ),
-      },
-      {
-        path: 'audit',
-        element: (
-          <RequireAdmin>
-            <PlaceholderRoute title="Audit log" icon="scroll-text" feature="audit" />
-          </RequireAdmin>
-        ),
-      },
+
       // Port existing admin CRUD app lama (/admin/*). RouteObject[] lazy dari slice data.
       ...dataRoutes,
       { path: '*', element: <NotFoundPage /> },

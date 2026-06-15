@@ -23,6 +23,7 @@ import { TourOverlay } from './TourOverlay.js';
 import { ToastStack } from './ToastStack.js';
 import { ConfirmHost } from './confirm.js';
 import { SplashScreen, isSplashSuppressed } from './SplashScreen.js';
+import { RouteRoleGuard } from './RouteRoleGuard.js';
 import { useShortcuts } from '../hooks/useShortcuts.js';
 import { useOnlineSync } from '../hooks/useOnline.js';
 import { useTour, tourNeverSeen } from './tour-store.js';
@@ -49,7 +50,9 @@ export function RootLayout() {
   if (isChromeless(pathname)) {
     return (
       <Suspense fallback={<SplashScreen />}>
-        <Outlet />
+        <RouteRoleGuard>
+          <Outlet />
+        </RouteRoleGuard>
       </Suspense>
     );
   }
@@ -67,7 +70,9 @@ export function RootLayout() {
         <main id="view" className="min-w-0 animate-fade" key={pathname}>
           <Breadcrumb />
           <Suspense fallback={<SplashScreen />}>
-            <Outlet />
+            <RouteRoleGuard>
+              <Outlet />
+            </RouteRoleGuard>
           </Suspense>
         </main>
       </div>
