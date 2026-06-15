@@ -1,0 +1,28 @@
+# Caddy reverse proxy untuk new-hydro-canal (docker-compose.prod.yml).
+# HTTPS otomatis via Let's Encrypt. {$DOMAIN} & {$ACME_EMAIL} dari env compose.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip zstd
+
+	# API → server. /api di-strip supaya sampai ke route asli (sejajar nginx/vite).
+	handle_path /api/* {
+		reverse_proxy server:4000 {
+			# SSE (sync pull / notifikasi) — jangan buffer.
+			flush_interval -1
+		}
+	}
+
+	# Health passthrough (canary/uptime hit /health langsung).
+	handle /health {
+		reverse_proxy server:4000
+	}
+
+	# Sisanya → SPA static (nginx di service client).
+	handle {
+		reverse_proxy client:80
+	}
+}

@@ -97,6 +97,19 @@ Wajib hafal sebelum touch code:
 - ❌ Jangan campur konteks dengan `../finago/` — pindah sesi kalau user nanya tentang FINA go
 - ❌ Jangan `git add -A` di root project (banyak file pribadi nyasar) — eksplisit per file
 
+## Guardrail arsitektur (GLOBAL — wajib semua agent)
+
+Berlaku di SELURUH repo. Per-feature CLAUDE.md boleh **menambah** guardrail lokal,
+**TIDAK boleh override/ignore** yang global. **Prinsip: global > local.**
+
+1. **`shared/` bukan junk-drawer.** Sesuatu masuk `shared/` HANYA jika dipakai ≥2 fitur DAN tidak punya owner jelas. Kalau ada owner → taruh di fitur owner, fitur lain import.
+2. **Doc tidak boleh basi.** Kode = source of truth; CLAUDE.md = pointer. Cross-link via frontmatter greppable, bukan prosa bebas. Ubah kode yang mengubah keterkaitan → update frontmatter di PR yang sama.
+3. **Earn the folder, earn the CLAUDE.md.** Jangan bikin subfolder/CLAUDE.md seremonial. CLAUDE.md kosong/boilerplate = noise > signal = dilarang.
+
+Arsitektur = **vertical slice**: kode fitur di `server/src/features/<fitur>/` & `client/src/features/<fitur>/`; cross-cutting di `*/shared/`. Tiap folder fitur WAJIB punya CLAUDE.md sesuai [`docs/_feature-claude-template.md`](./docs/_feature-claude-template.md).
+
+Sumber keputusan fondasi: [`docs/superpowers/specs/2026-06-15-foundation-architecture-design.md`](./docs/superpowers/specs/2026-06-15-foundation-architecture-design.md). Ringkasan struktur + kontrak bersama: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
 ## Existing app reference
 
 App lama: [`luhtaf/fullstack-hydrocanal-graph`](https://github.com/luhtaf/fullstack-hydrocanal-graph) (branch `fathul`).

@@ -8,6 +8,30 @@ Platform operasi & QC kanal — penerus [fullstack-hydrocanal-graph](https://git
 
 Mockup MVP-nya ada di [`demo/`](./demo) — drag-drop ke Netlify atau buka lokal.
 
+## Dev quickstart
+
+Monorepo npm workspaces (`client` + `server`). Butuh Node ≥ 20 + MongoDB.
+
+```bash
+# 1. install semua workspace dari root
+npm install
+
+# 2. siapkan env server
+cp .env.example server/.env   # isi MONGO_URI dll
+
+# 3. jalankan (server :4000 + client :5173, vite proxy /api → server)
+npm run dev               # keduanya
+npm run dev:server        # API saja
+npm run dev:client        # FE saja
+
+# cek lain
+npm run typecheck         # tsc strict di kedua workspace
+npm run test              # vitest
+npm run build             # build server (tsc) + client (vite)
+```
+
+Arsitektur kode (vertical slice + shared + guardrail): lihat [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
 ## 📚 Docs (resume di sesi baru, baca berurutan)
 
 | File | Isi |
@@ -18,6 +42,8 @@ Mockup MVP-nya ada di [`demo/`](./demo) — drag-drop ke Netlify atau buka lokal
 | [`PLAN.md`](./PLAN.md) | Master roadmap + tech stack + phase list + existing system inventory |
 | [`PLAN-FE.md`](./PLAN-FE.md) | Frontend detail: per-page, state, helpers, **demo subset wajib dipertahankan** |
 | [`PLAN-BE.md`](./PLAN-BE.md) | Backend detail: schema (existing + baru), endpoint per route, sync algorithm, port existing logic |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Struktur kode produksi: vertical slice + shared + guardrail + kontrak bersama |
+| [`docs/_feature-claude-template.md`](./docs/_feature-claude-template.md) | Template CLAUDE.md per folder fitur (wajib) |
 | [`demo/README.md`](./demo/README.md) | Fitur demo + cara coba |
 
 Implementasi = **superset dari app lama**: semua fitur existing fullstack-hydrocanal-graph wajib di-port + ditambah ops layer baru (undangan, penugasan, offline, role, reports, audit). Detail di `PLAN.md`.

@@ -1,0 +1,51 @@
+# CI new-hydro-canal — install + typecheck + test (client & server).
+# Monorepo npm workspaces: install sekali di root, lalu per-workspace.
+# server test pakai vitest (beberapa integrasi butuh mongo-memory-server,
+# yang spin mongod in-process — tak perlu service mongo di CI).
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Batalin run lama saat ada push baru di ref/PR yang sama.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: ${{ matrix.workspace }} — typecheck + test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [server, client]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Native deps utk node-canvas (chartjs-node-canvas) saat install server.
+      - name: Install native libs (canvas)
+        if: matrix.workspace == 'server'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libcairo2-dev libpango1.0-dev libgif-dev librsvg2-dev libjpeg-dev
+
+      - name: Install deps (workspaces)
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck --workspace=${{ matrix.workspace }}
+
+      - name: Test
+        run: npm run test --workspace=${{ matrix.workspace }}
