@@ -20,7 +20,7 @@ invisible buat logika app.
 - `sync.service.ts` — orkestrasi push (idempotent, per-doc conflict), pull (since cursor), seed.
 - `projection.ts` — flat (`parameter:<canalId>`, `depth:<canalId>:<sta>`) ⇄ `Data` nested; clamp Measure Date.
 - `conflict.ts` — strategi: LWW parameter, manual kedalaman, server-wins admin-field.
-- `models.ts` — akses model shared by-name (lazy, tak meng-author model slice lain) + `SyncCursor` & `SyncDocMeta` (di-own sini). `SyncDocMeta` simpan `updatedAt` per-canal karena model legacy `Data` sengaja tanpa `timestamps`.
+- `models.ts` — akses model shared by-name (lazy, tak meng-author model slice lain) + `SyncCursor` & `SyncDocMeta` (di-own sini). `SyncDocMeta` simpan `updatedAt` **per-flat-doc** (`docId`, + `canalId` untuk grouping) karena model legacy `Data` sengaja tanpa `timestamps`. Granularity per-doc WAJIB: kalau per-canal, depth titik baru salah dinilai konflik dalam batch yang sama (silent data-loss).
 - `sync.test.ts` — integration (mongo-memory-server): push/pull/idempotency/conflict + unit projection/conflict.
 
 ## Keterkaitan

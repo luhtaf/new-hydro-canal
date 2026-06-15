@@ -83,21 +83,29 @@ export function SyncCursor(): Model<SyncCursorDoc> {
 }
 
 /**
- * Stempel waktu sync per-canal. PENTING: model legacy `Data` SENGAJA tanpa `timestamps`
+ * Stempel waktu sync per-FLAT-DOC. PENTING: model legacy `Data` SENGAJA tanpa `timestamps`
  * (jangan diubah — guardrail "extend, bukan replace" + kompat dokumen lama). Jadi sync
- * menyimpan `updatedAt` proyeksinya sendiri di collection ini, by `canalId`. Inilah
- * basis conflict detection (serverBase vs serverUpdatedAt) dan cursor `pull?since=`.
+ * menyimpan `updatedAt` proyeksinya sendiri di collection ini.
+ *
+ * Granularity = per `docId` (`parameter:<canalId>` | `depth:<canalId>:<sta>`), BUKAN
+ * per-canalId. Alasan: conflict detection harus per-flat-doc. Kalau per-canal, dalam
+ * SATU batch push doc `parameter` lebih dulu nge-stamp canal, lalu doc `depth` titik BARU
+ * (serverBase null) salah dinilai sebagai konflik manual terhadap stamp itu → kedalaman
+ * silently hilang. `canalId` tetap disimpan untuk grouping pull/seed.
  */
 export interface SyncDocMetaDoc {
-  /** kunci proyeksi = canalId (1 canal = 1 Data segment). */
+  /** kunci = flat doc _id (`parameter:<canalId>` | `depth:<canalId>:<sta>`). */
+  docId: string;
+  /** canalId pemilik (untuk grouping pull/seed → findDataForCanal). */
   canalId: string;
-  /** ISO updatedAt server terakhir proyeksi ini berubah. */
+  /** ISO updatedAt server terakhir doc ini berubah. */
   updatedAt: string;
 }
 
 const syncDocMetaSchema = new Schema<SyncDocMetaDoc>(
   {
-    canalId: { type: String, required: true, unique: true, index: true },
+    docId: { type: String, required: true, unique: true, index: true },
+    canalId: { type: String, required: true, index: true },
     updatedAt: { type: String, required: true },
   },
   { collection: 'sync_doc_meta' },

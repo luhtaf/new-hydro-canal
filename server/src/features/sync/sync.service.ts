@@ -62,16 +62,16 @@ async function finishDateForCanal(canalId: string): Promise<string | Date | unde
   return canal?.finishDate;
 }
 
-/** ISO updatedAt proyeksi canal (null kalau belum pernah disinkron). */
-async function serverUpdatedAtFor(canalId: string): Promise<string | null> {
-  const meta = await SyncDocMeta().findOne({ canalId }).lean().exec();
+/** ISO updatedAt flat-doc (null kalau belum pernah disinkron → insert). */
+async function serverUpdatedAtFor(docId: string): Promise<string | null> {
+  const meta = await SyncDocMeta().findOne({ docId }).lean().exec();
   return meta?.updatedAt ?? null;
 }
 
-/** Set stempel updatedAt proyeksi canal. */
-async function stampCanal(canalId: string, updatedAt: string): Promise<void> {
+/** Set stempel updatedAt sebuah flat-doc (per docId; canalId disimpan untuk grouping). */
+async function stampDoc(docId: string, canalId: string, updatedAt: string): Promise<void> {
   await SyncDocMeta()
-    .updateOne({ canalId }, { $set: { updatedAt } }, { upsert: true })
+    .updateOne({ docId }, { $set: { canalId, updatedAt } }, { upsert: true })
     .exec();
 }
 
@@ -90,7 +90,7 @@ export async function pushDocs(docs: SyncDoc[]): Promise<PushResult[]> {
       continue;
     }
 
-    const serverUpdatedAt = await serverUpdatedAtFor(parsed.canalId);
+    const serverUpdatedAt = await serverUpdatedAtFor(doc._id);
     const decision = decide(doc, serverUpdatedAt);
 
     if (!decision.accept) {
@@ -143,7 +143,7 @@ export async function pushDocs(docs: SyncDoc[]): Promise<PushResult[]> {
 
     // Stempel waktu baru = updatedAt doc (monoton; idempoten karena set, bukan increment).
     const rev = doc.updatedAt;
-    await stampCanal(parsed.canalId, rev);
+    await stampDoc(doc._id, parsed.canalId, rev);
     results.push({ id: doc._id, ok: true, rev });
   }
 
@@ -183,11 +183,21 @@ export async function pullChanges(
 
   const changes: SyncDoc[] = [];
   let lastSeq = sinceIso;
+  // Cache Data per canal (banyak flat-doc meta bisa share canal yang sama).
+  const dataCache = new Map<string, DataDoc | null>();
   for (const meta of metas) {
     if (allowed && !allowed.has(meta.canalId)) continue;
-    const data = await findDataForCanal(meta.canalId);
+    let data = dataCache.get(meta.canalId);
+    if (data === undefined) {
+      data = await findDataForCanal(meta.canalId);
+      dataCache.set(meta.canalId, data);
+    }
     if (data) {
-      changes.push(...dataToFlatDocs(data, { updatedAt: meta.updatedAt }));
+      // Emit hanya flat-doc yang berubah (cocokkan _id dengan meta.docId).
+      const flat = dataToFlatDocs(data, { updatedAt: meta.updatedAt }).find(
+        (d) => d._id === meta.docId,
+      );
+      if (flat) changes.push(flat);
     }
     if (meta.updatedAt > lastSeq) lastSeq = meta.updatedAt;
   }
@@ -239,9 +249,14 @@ export async function seedForUser(userId: string): Promise<{
   for (const canalId of canalIds as string[]) {
     const data = await findDataForCanal(canalId);
     if (!data) continue;
-    const meta = await SyncDocMeta().findOne({ canalId }).lean().exec();
-    const updatedAt = meta?.updatedAt ?? new Date().toISOString();
-    result.drafts.push(...dataToFlatDocs(data, { updatedAt }));
+    // Per-doc updatedAt dari meta (fallback now). Emit semua flat-doc canal ini.
+    const metas = await SyncDocMeta().find({ canalId }).lean().exec();
+    const tsByDoc = new Map(metas.map((m) => [m.docId, m.updatedAt]));
+    const fallback = new Date().toISOString();
+    for (const flat of dataToFlatDocs(data, { updatedAt: fallback })) {
+      flat.updatedAt = tsByDoc.get(flat._id) ?? fallback;
+      result.drafts.push(flat);
+    }
   }
 
   return result;
