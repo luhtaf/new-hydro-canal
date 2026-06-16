@@ -4,6 +4,26 @@ import react from '@vitejs/plugin-react';
 // Proxy /api ke server dev supaya session cookie satu origin saat dev.
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Pisah vendor berat jadi chunk sendiri biar warning chunk >500kB hilang
+        // & main bundle ramping (lazy-load per page tinggal narik chunk relevan).
+        manualChunks: {
+          // Leaflet + proj4 (peta AOI) — paling berat, jarang berubah.
+          leaflet: ['leaflet', 'proj4'],
+          // Chart.js + plugin drag/annotation (chart kedalaman kanal).
+          charts: ['chart.js', 'chartjs-plugin-dragdata', 'chartjs-plugin-annotation'],
+          // Excel import/export.
+          xlsx: ['xlsx'],
+          // PouchDB offline store + query.
+          pouch: ['pouchdb-browser', 'pouchdb-find'],
+          // Core React runtime + router — stabil, cache-friendly.
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

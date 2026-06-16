@@ -14,7 +14,7 @@ RUN npm install
 COPY index.html ./
 COPY vite.config.ts ./
 COPY postcss.config.js ./
-COPY tailwind.config.js ./
+COPY tailwind.config.ts ./
 COPY src ./src
 
 # /api di-rewrite ke server saat dev; di prod nginx yang proxy (lihat nginx.conf).

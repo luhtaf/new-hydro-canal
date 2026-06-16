@@ -14,12 +14,18 @@
     "dev:client": "npm run dev --workspace=client",
     "build": "npm run build --workspace=server && npm run build --workspace=client",
     "typecheck": "npm run typecheck --workspace=server && npm run typecheck --workspace=client",
-    "test": "npm run test --workspace=server && npm run test --workspace=client"
+    "test": "npm run test --workspace=server && npm run test --workspace=client",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:install": "playwright install --with-deps chromium"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
-    "jsdom": "^24.1.0"
+    "@playwright/test": "^1.61.0",
+    "jsdom": "^24.1.0",
+    "playwright": "^1.61.0"
   }
 }

@@ -1,0 +1,19 @@
+{
+  "//": "tsconfig khusus suite E2E Playwright. TERPISAH dari typecheck workspace (client/server hanya include src/). Tidak ikut `npm run typecheck`. Butuh @playwright/test terpasang (lihat missingDeps).",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": false,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true
+  },
+  "include": ["**/*.ts", "../playwright.config.ts"]
+}

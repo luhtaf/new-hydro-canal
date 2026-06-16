@@ -40,6 +40,13 @@ lerna-debug.log*
 .cache/
 tmp/
 
+# Playwright E2E (output + generated fixtures runtime)
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/blob-report/
+e2e/.artifacts/
+
 # Personal / work files yang nyasar ke root project
 *.docx
 *.xlsx

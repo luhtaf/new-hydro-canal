@@ -41,24 +41,30 @@ export function Breadcrumb() {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="no-print mb-4 flex items-center gap-1.5 text-sm text-slate-500"
+      className="no-print mb-4 flex items-center gap-1 text-sm text-slate-500"
     >
-      <Link to="/" className="hover:text-slate-900 inline-flex items-center gap-1">
+      <Link
+        to="/"
+        className="hover:text-slate-900 inline-flex items-center gap-1 transition-colors"
+      >
         <Icon name="home" className="w-3.5 h-3.5" />
       </Link>
       {crumbs.map((c, i) => {
         const last = i === crumbs.length - 1;
         return (
-          <span key={c.to} className="inline-flex items-center gap-1.5">
-            <span className="text-slate-300">/</span>
+          <span key={c.to} className="inline-flex items-center gap-1">
+            <Icon name="chevron-right" className="w-3.5 h-3.5 text-slate-300" />
             {last ? (
-              <span className={`font-semibold text-slate-900 ${c.isId ? 'font-mono text-xs' : ''}`}>
+              <span
+                className={`font-semibold text-slate-900 ${c.isId ? 'font-mono text-xs' : ''}`}
+                aria-current="page"
+              >
                 {c.label}
               </span>
             ) : (
               <Link
                 to={c.to}
-                className={`hover:text-slate-900 ${c.isId ? 'font-mono text-xs' : ''}`}
+                className={`hover:text-slate-900 transition-colors ${c.isId ? 'font-mono text-xs' : ''}`}
               >
                 {c.label}
               </Link>

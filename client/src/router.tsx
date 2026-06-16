@@ -1,9 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { RootLayout } from './shared/layout/RootLayout.js';
-import { RequireAdmin } from './shared/layout/RequireAdmin.js';
 import { NotFoundPage } from './shared/layout/NotFoundPage.js';
-import { makePlaceholder } from './shared/layout/Placeholder.js';
-import type { IconName } from './shared/lib/icon.js';
 import { LoginPage, ProtectedRoute } from './features/auth/index.js';
 import { dataRoutes } from './features/data/index.js';
 import { KonflikList } from './features/konflik/KonflikList.js';
@@ -20,6 +17,7 @@ import { pengaturanRoutes } from './features/pengaturan/index.js';
 import { usersRoutes } from './features/users/index.js';
 import { auditRoutes } from './features/audit/index.js';
 import { helpRoutes } from './features/help/index.js';
+import { distrikRoutes } from './features/distrik/index.js';
 
 /**
  * Router shell.
@@ -27,8 +25,8 @@ import { helpRoutes } from './features/help/index.js';
  * RootLayout (TopNav/Sidebar/overlay) membungkus semua route lewat <Outlet>.
  * Route fitur Phase 2 dipasang lewat config slice masing-masing (spread route array
  * ATAU lazy default export). Gating admin lewat `handle.requireRole: 'admin'` yang
- * dibaca <RouteRoleGuard> di RootLayout (operator → NoAccessPage). Route admin yang
- * BELUM punya slice (distrik) tetap dibungkus <RequireAdmin> manual.
+ * dibaca <RouteRoleGuard> di RootLayout (operator → NoAccessPage). Semua route admin
+ * (users/audit/distrik/reports) kini punya slice/handle sendiri — tak ada placeholder lagi.
  *
  * Catatan: pakai createBrowserRouter (history API), bukan hash. Demo memang hash,
  * tapi produksi pakai path bersih (Pages SPA fallback). Selector tour disesuaikan.
@@ -77,6 +75,7 @@ export const router = createBrowserRouter([
       // --- Admin-only (gating via handle.requireRole di RouteRoleGuard) ---
       ...usersRoutes, // /users (handle.requireRole admin)
       ...auditRoutes, // /audit (handle.requireRole admin)
+      ...distrikRoutes, // /distrik (handle.requireRole admin)
       {
         path: 'reports',
         handle: { requireRole: 'admin' },
@@ -85,25 +84,9 @@ export const router = createBrowserRouter([
         }),
       },
 
-      // Distrik & Region — belum ada slice; placeholder admin-only (wrapper manual).
-      {
-        path: 'distrik',
-        element: (
-          <RequireAdmin>
-            <PlaceholderRoute title="Distrik & Region" icon="map-pinned" feature="distrik" />
-          </RequireAdmin>
-        ),
-      },
-
       // Port existing admin CRUD app lama (/admin/*). RouteObject[] lazy dari slice data.
       ...dataRoutes,
       { path: '*', element: <NotFoundPage /> },
     ],
   },
 ]);
-
-/** Wrapper komponen placeholder untuk dipakai inline di route admin. */
-function PlaceholderRoute(props: { title: string; icon: IconName; feature?: string }) {
-  const Cmp = makePlaceholder(props.title, props.icon, props.feature);
-  return <Cmp />;
-}

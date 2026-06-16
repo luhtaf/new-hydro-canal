@@ -56,13 +56,16 @@ export function TopNav() {
           <Icon name="menu" className="w-5 h-5 text-slate-600" />
         </button>
 
-        <Link to="/" className="flex items-center gap-2.5 font-bold text-slate-900">
-          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 grid place-items-center shadow-soft">
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 font-display font-bold tracking-tight text-slate-900"
+        >
+          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 grid place-items-center shadow-soft ring-1 ring-inset ring-white/20">
             <Icon name="droplets" className="w-4 h-4 text-white" />
           </span>
           <span className="hidden sm:inline">HydroCanal QC</span>
         </Link>
-        <span className="hidden md:inline-flex badge bg-slate-100 text-slate-600 ml-2">
+        <span className="hidden md:inline-flex badge bg-slate-100 text-slate-500 ml-2 font-mono">
           v2.0 · ops
         </span>
 
