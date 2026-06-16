@@ -63,8 +63,31 @@ export interface AuthProfile {
   initials: string;
 }
 
-export interface LoginResponse {
-  user: AuthProfile;
+/**
+ * Bentuk user MENTAH dari server (be-auth `toPublicUser`): identity field = `id`.
+ * Slice FE ini canonical-nya `userId` (store keyed userId + PouchDB namespace),
+ * jadi kita map di boundary ini — jangan bocorkan `id` ke store/komponen.
+ */
+interface ServerUser {
+  id: string;
+  name: string;
+  email: string;
+  idpSubject?: string | null;
+  role: Role;
+  usv: UsvCode | null;
+  initials: string;
+}
+
+function toAuthProfile(u: ServerUser): AuthProfile {
+  return {
+    userId: u.id,
+    name: u.name,
+    email: u.email,
+    idpSubject: u.idpSubject ?? null,
+    role: u.role,
+    usv: u.usv,
+    initials: u.initials,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -74,8 +97,8 @@ export interface LoginResponse {
 export const authApi = {
   /** Login online (enroll / add account). Server set session cookie. */
   async login(payload: LoginPayload): Promise<AuthProfile> {
-    const { data } = await apiClient.post<LoginResponse>('/auth/login', payload);
-    return data.user;
+    const { data } = await apiClient.post<{ user: ServerUser }>('/auth/login', payload);
+    return toAuthProfile(data.user);
   },
 
   /** Logout server-side (best-effort; state lokal di-handle store). */
@@ -90,9 +113,9 @@ export const authApi = {
   /** Cek sesi + status revoke akun (dipanggil saat device online lagi). */
   async me(): Promise<AuthProfile & { revoked: boolean }> {
     const { data } = await apiClient.get<{
-      user: AuthProfile;
+      user: ServerUser;
       revoked: boolean;
     }>('/auth/me');
-    return { ...data.user, revoked: data.revoked };
+    return { ...toAuthProfile(data.user), revoked: data.revoked };
   },
 };

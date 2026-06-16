@@ -68,9 +68,19 @@ export const login: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const me: RequestHandler = (req, res) => {
-  const u = getAuthUser(req);
-  res.json({ user: u });
+export const me: RequestHandler = async (req, res, next) => {
+  try {
+    const u = getAuthUser(req);
+    const found = await UserModel.findById(u.id).lean();
+    if (!found) {
+      res.status(401).json({ error: 'Sesi tidak valid', code: 'NO_SESSION' });
+      return;
+    }
+    // Kontrak FE: { user: AuthProfile(userId...), revoked }.
+    res.json({ user: toPublicUser(found), revoked: Boolean(found.revoked) });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const logout: RequestHandler = (req, res, next) => {
