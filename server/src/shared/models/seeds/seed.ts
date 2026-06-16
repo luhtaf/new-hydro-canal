@@ -18,6 +18,7 @@ import bcrypt from 'bcrypt';
 import { District } from '../District.js';
 import { Contractor } from '../Contractor.js';
 import { UserModel } from '../User.js';
+import { Pengukuran } from '../Pengukuran.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -109,14 +110,32 @@ export async function seedDefaultAdmin(
   return { created: true, email };
 }
 
-/** Jalankan semua seed master shared sekaligus (urutan: districts → contractors → admin). */
+/**
+ * Seed threshold singleton kalau collection `pengukurans` masih kosong (first boot).
+ * Default DOMAIN.md poin 5: lulus 2.500, tidakLulus 2.000, toleransi 2.000–2.500.
+ * Idempotent: kalau sudah ada dokumen, no-op (admin yang atur via UI Pengaturan).
+ */
+export async function seedDefaultThreshold(): Promise<{ created: boolean }> {
+  const count = await Pengukuran.estimatedDocumentCount();
+  if (count > 0) return { created: false };
+  await Pengukuran.create({
+    lulus: 2.5,
+    tidakLulus: 2.0,
+    toleransi: { batasAwal: 2.0, batasAkhir: 2.5 },
+  });
+  return { created: true };
+}
+
+/** Jalankan semua seed master shared sekaligus (districts → contractors → threshold → admin). */
 export async function seedAll(adminInput?: DefaultAdminInput): Promise<{
   districts: Awaited<ReturnType<typeof seedDistricts>>;
   contractors: Awaited<ReturnType<typeof seedContractors>>;
+  threshold: Awaited<ReturnType<typeof seedDefaultThreshold>>;
   admin: Awaited<ReturnType<typeof seedDefaultAdmin>>;
 }> {
   const districts = await seedDistricts();
   const contractors = await seedContractors();
+  const threshold = await seedDefaultThreshold();
   const admin = await seedDefaultAdmin(adminInput);
-  return { districts, contractors, admin };
+  return { districts, contractors, threshold, admin };
 }

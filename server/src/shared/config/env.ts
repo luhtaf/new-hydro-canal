@@ -9,6 +9,9 @@ const schema = z.object({
   PORT: z.coerce.number().default(4000),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  // Override admin default first-boot (opsional; default di seedDefaultAdmin).
+  ADMIN_EMAIL: z.string().optional(),
+  ADMIN_PIN: z.string().optional(),
 });
 
 export type Env = z.infer<typeof schema>;

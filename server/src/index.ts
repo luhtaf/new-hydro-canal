@@ -8,13 +8,28 @@ import { connectDb } from './shared/db/connect.js';
 import { createApp } from './app.js';
 import { logger } from './shared/middleware/logger.js';
 import { addAllDefaultDistricts } from './features/district/district.seed.js';
+import {
+  seedContractors,
+  seedDefaultAdmin,
+  seedDefaultThreshold,
+} from './shared/models/seeds/seed.js';
 
 async function main(): Promise<void> {
   const env = loadEnv();
   await connectDb(env.MONGO_URI);
 
-  // Seeding saat koneksi open (PORT addAllDefaultDistricts existing). Idempotent.
+  // Seeding saat koneksi open. Semua idempotent (upsert / no-op kalau sudah ada).
+  // - Districts: pola existing addAllDefaultDistricts.
+  // - Contractors: mapping shortName (DOMAIN.md poin 8).
+  // - Admin default: hanya kalau collection users masih kosong (first boot).
   await addAllDefaultDistricts();
+  await seedContractors();
+  await seedDefaultThreshold();
+  const admin = await seedDefaultAdmin({
+    email: env.ADMIN_EMAIL,
+    pin: env.ADMIN_PIN,
+  });
+  if (admin.created) logger.info(`Seed admin default: ${admin.email}`);
 
   const app = createApp(env);
   const server = app.listen(env.PORT, () => {
