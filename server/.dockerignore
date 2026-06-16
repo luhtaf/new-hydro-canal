@@ -1,0 +1,10 @@
+# node_modules host (darwin/arm) jangan masuk image — di-install ulang utk
+# linux + native canvas. dist hasil build di dalam image saja.
+node_modules
+dist
+.env
+.env.*
+*.log
+.DS_Store
+coverage
+**/*.test.ts

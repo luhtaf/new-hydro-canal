@@ -1,0 +1,70 @@
+# ── new-hydro-canal — production compose ───────────────────────────────
+# Override: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Beda dari dev:
+#   - server & client jalan dari runtime stage (image built, no bind mount).
+#   - caddy di depan → HTTPS otomatis (Let's Encrypt) + reverse proxy.
+#   - tidak expose port app langsung ke host; cuma caddy 80/443.
+#
+# Set DOMAIN + ACME_EMAIL + SESSION_SECRET di .env sebelum up.
+# Catatan: di foundation spec § B, FE static idealnya ke Pages — compose ini
+# untuk skenario single-box self-host (FE+API+mongo+caddy satu mesin).
+
+services:
+  mongo:
+    restart: always
+    ports: !reset []
+    networks:
+      - hydrocanal
+
+  server:
+    build:
+      target: runtime
+    restart: always
+    command: !reset null
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGO_URI: mongodb://mongo:27017/hydrocanal
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET wajib di prod}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:?CLIENT_ORIGIN wajib di prod (https://domain)}
+    # Tidak expose ke host — caddy yang akses via network internal.
+    ports: !reset []
+    volumes: !reset []
+    networks:
+      - hydrocanal
+
+  client:
+    build:
+      target: runtime
+    restart: always
+    command: !reset null
+    environment:
+      NODE_ENV: production
+    ports: !reset []
+    volumes: !reset []
+    networks:
+      - hydrocanal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN wajib (mis. qc.kartabhumi.id)}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL wajib utk Let's Encrypt}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - client
+      - server
+    networks:
+      - hydrocanal
+
+volumes:
+  caddy-data:
+  caddy-config:

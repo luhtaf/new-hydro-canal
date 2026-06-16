@@ -1,0 +1,92 @@
+# ── new-hydro-canal — dev/local compose ───────────────────────────────
+# client + server + mongo. Mode dev: hot-reload via bind mount,
+# node_modules di-anonymize lewat named volume (pattern) supaya
+# node_modules host (darwin/arm) nggak nimpa node_modules image (linux).
+#
+# Native canvas deps (cairo/pango/libgif/librsvg) sudah di server/Dockerfile.
+# Prod (caddy HTTPS + image built): pakai docker-compose.prod.yml.
+#
+# Jalanin: docker compose up --build
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: hydrocanal
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - hydrocanal
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      # Stage build punya semua tooling + native deps utk dev hot-reload.
+      target: build
+    restart: unless-stopped
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      MONGO_URI: mongodb://mongo:27017/hydrocanal
+      SESSION_SECRET: ${SESSION_SECRET:-dev-secret-ganti-di-prod}
+      CLIENT_ORIGIN: http://localhost:5173
+    volumes:
+      - ./server/src:/app/src
+      - ./server/package.json:/app/package.json
+      - ./server/tsconfig.json:/app/tsconfig.json
+      # Named volume: lindungi node_modules image dari bind-mount host.
+      - server-node-modules:/app/node_modules
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - hydrocanal
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: build
+    restart: unless-stopped
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./client/src:/app/src
+      - ./client/index.html:/app/index.html
+      - ./client/vite.config.ts:/app/vite.config.ts
+      - ./client/postcss.config.js:/app/postcss.config.js
+      - ./client/tailwind.config.js:/app/tailwind.config.js
+      - client-node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+    networks:
+      - hydrocanal
+
+volumes:
+  mongo-data:
+  server-node-modules:
+  client-node-modules:
+
+networks:
+  hydrocanal:
+    driver: bridge

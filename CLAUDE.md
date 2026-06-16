@@ -1,4 +1,6 @@
-# CLAUDE.md — new-hydro-canal
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > Instruksi untuk Claude saat sesi baru di repo ini. Baca sebelum mulai apa-apa.
 
@@ -9,6 +11,20 @@
 Stack produksi: **React + Vite + TS + PouchDB + Chart.js + Leaflet**. Sister app: [`../finago/`](../finago/) (FINA go expense).
 
 Status: **Phase 0 (demo mockup) selesai, ~3000 baris vanilla HTML+JS+CSS.** Implementasi produksi belum mulai.
+
+## Commands
+
+Belum ada toolchain produksi (no `package.json`, no build/lint/test) — repo saat ini = docs + demo static. Yang ada cuma menjalankan demo:
+
+```bash
+# Jalanin demo (folder static, no build step)
+python3 -m http.server 8080 -d demo
+# → http://localhost:8080
+```
+
+Atau drag folder `demo/` ke <https://app.netlify.com/drop>. Edit `demo/{index.html,app.js,style.css}` lalu refresh browser — tidak ada hot-reload, tidak ada compile.
+
+Saat Phase 1 mulai: scaffold monorepo `client/` (Vite+React+TS) + `server/` (Express+Mongoose) sesuai `PLAN-FE.md` / `PLAN-BE.md`. Begitu `package.json` ada, **tambahkan command build/lint/test ke file ini**.
 
 ## Sebelum kerja apa-apa, baca urutan ini
 
@@ -27,6 +43,19 @@ Demo di [`demo/`](./demo/) adalah ground truth untuk UI/UX produksi. Saat implem
 - **Port struktur + interaksi** dari demo, jangan reinvent
 - Semua "touches" di demo (dark mode, ⌘K palette, walkthrough tour 8-step, role pill, real export, lock badges, dll) **WAJIB dipertahankan** — check-list 14 kategori di `PLAN-FE.md` section "Demo subset"
 - Visual: Tailwind + Lucide + Inter font + brand sky/cyan
+
+### Arsitektur demo (`demo/app.js`, ~1750 baris vanilla JS)
+
+Single-file SPA, no framework, no build. Polanya:
+
+- **Hash router**: `route()` baca `location.hash`, sembunyikan semua `<section>` lalu tampilkan view aktif + panggil `render*()` yang sesuai. Template tiap page = `<template id="view-*">` di `index.html`.
+- **Global `state`** (object di-`persist()` ke `localStorage`): `role`, `theme`, `online`, `queue`, `threshold`, `settings`, `notifications`, `depthEdits`, `tourSeen`. Tiap mutasi → `persist()` lalu re-render manual (tidak ada reactivity).
+- **Render functions** per page: `renderDashboard`, `renderUndangan(+Detail)`, `renderPenugasan(+Detail)`, `renderDepth`, `renderMap`, `renderReports`, `renderAudit`, `renderUsers`, `renderPengaturan`, dst. Cari nama fungsi ini saat butuh logic suatu page.
+- **Domain helpers** (port ke `src/domain/` di produksi, jangan tulis ulang dari nol): `deadlineInfo()`, `shortName()`, `penugasanList()` (grouping kontraktor→distrik), `attachParameterDateLogic()` (clamp Measure Date), `attachValidators()` (validasi form realtime), `sampleDepthRows()` + final-depth math di chart.
+- **Interaksi nyata**: `openCmdK`/`filterCmdK` (⌘K), `startTour`/`showTourStep` (8-step), `applyRole`/`toggleRole`, `applyTheme`/`toggleTheme`, `toggleConnectivity`/`renderSyncList` (offline+queue), `triggerConflict`, `captureGPS`, `handleCSVImport`, `exportTXT/CSV/XLSX/PNG` (download beneran), `tickClock`, `updateTitleBadge`.
+- **Today demo di-pin** ke `2026-05-18` supaya deadline countdown stabil — jangan ganti ke `new Date()` tanpa alasan.
+
+`style.css` (~240 baris) = custom di atas Tailwind play-CDN: dark mode, role visibility (`body.role-operator [data-min-role="admin"]`), tour spotlight, modal, print stylesheet.
 
 ## Filosofi: NEW = SUPERSET dari EXISTING
 
@@ -67,6 +96,19 @@ Wajib hafal sebelum touch code:
 - ❌ Jangan pakai full CouchDB sync (revision tree bengkak karena nested schema) — pakai custom REST sync
 - ❌ Jangan campur konteks dengan `../finago/` — pindah sesi kalau user nanya tentang FINA go
 - ❌ Jangan `git add -A` di root project (banyak file pribadi nyasar) — eksplisit per file
+
+## Guardrail arsitektur (GLOBAL — wajib semua agent)
+
+Berlaku di SELURUH repo. Per-feature CLAUDE.md boleh **menambah** guardrail lokal,
+**TIDAK boleh override/ignore** yang global. **Prinsip: global > local.**
+
+1. **`shared/` bukan junk-drawer.** Sesuatu masuk `shared/` HANYA jika dipakai ≥2 fitur DAN tidak punya owner jelas. Kalau ada owner → taruh di fitur owner, fitur lain import.
+2. **Doc tidak boleh basi.** Kode = source of truth; CLAUDE.md = pointer. Cross-link via frontmatter greppable, bukan prosa bebas. Ubah kode yang mengubah keterkaitan → update frontmatter di PR yang sama.
+3. **Earn the folder, earn the CLAUDE.md.** Jangan bikin subfolder/CLAUDE.md seremonial. CLAUDE.md kosong/boilerplate = noise > signal = dilarang.
+
+Arsitektur = **vertical slice**: kode fitur di `server/src/features/<fitur>/` & `client/src/features/<fitur>/`; cross-cutting di `*/shared/`. Tiap folder fitur WAJIB punya CLAUDE.md sesuai [`docs/_feature-claude-template.md`](./docs/_feature-claude-template.md).
+
+Sumber keputusan fondasi: [`docs/superpowers/specs/2026-06-15-foundation-architecture-design.md`](./docs/superpowers/specs/2026-06-15-foundation-architecture-design.md). Ringkasan struktur + kontrak bersama: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Existing app reference
 
